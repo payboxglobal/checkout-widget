@@ -20,6 +20,18 @@ export namespace Components {
          */
         "middle": string;
     }
+    interface PayboxCheckoutWidget {
+        "amount": number;
+        "btntext": string;
+        "colour": string;
+        "curreny": string;
+        "merchant_key": string;
+        "phone_number": string;
+    }
+}
+export interface PayboxCheckoutWidgetCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLPayboxCheckoutWidgetElement;
 }
 declare global {
     interface HTMLMyComponentElement extends Components.MyComponent, HTMLStencilElement {
@@ -28,8 +40,15 @@ declare global {
         prototype: HTMLMyComponentElement;
         new (): HTMLMyComponentElement;
     };
+    interface HTMLPayboxCheckoutWidgetElement extends Components.PayboxCheckoutWidget, HTMLStencilElement {
+    }
+    var HTMLPayboxCheckoutWidgetElement: {
+        prototype: HTMLPayboxCheckoutWidgetElement;
+        new (): HTMLPayboxCheckoutWidgetElement;
+    };
     interface HTMLElementTagNameMap {
         "my-component": HTMLMyComponentElement;
+        "paybox-checkout-widget": HTMLPayboxCheckoutWidgetElement;
     }
 }
 declare namespace LocalJSX {
@@ -47,8 +66,18 @@ declare namespace LocalJSX {
          */
         "middle"?: string;
     }
+    interface PayboxCheckoutWidget {
+        "amount"?: number;
+        "btntext"?: string;
+        "colour"?: string;
+        "curreny"?: string;
+        "merchant_key"?: string;
+        "onDidReset"?: (event: PayboxCheckoutWidgetCustomEvent<any>) => void;
+        "phone_number"?: string;
+    }
     interface IntrinsicElements {
         "my-component": MyComponent;
+        "paybox-checkout-widget": PayboxCheckoutWidget;
     }
 }
 export { LocalJSX as JSX };
@@ -56,6 +85,7 @@ declare module "@stencil/core" {
     export namespace JSX {
         interface IntrinsicElements {
             "my-component": LocalJSX.MyComponent & JSXBase.HTMLAttributes<HTMLMyComponentElement>;
+            "paybox-checkout-widget": LocalJSX.PayboxCheckoutWidget & JSXBase.HTMLAttributes<HTMLPayboxCheckoutWidgetElement>;
         }
     }
 }

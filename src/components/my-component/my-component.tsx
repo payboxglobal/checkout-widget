@@ -1,4 +1,4 @@
-import { Component, Prop, h } from '@stencil/core';
+import { Component, Host, Prop, h } from '@stencil/core';
 import { format } from '../../utils/utils';
 
 @Component({
@@ -27,6 +27,16 @@ export class MyComponent {
   }
 
   render() {
-    return <div>Hello, World! I'm {this.getText()}</div>;
+    return (
+      <Host>
+        <div>Hello, World! I'm {this.getText()}</div>
+        <br></br>
+        <div class="container-custom">
+          <div class="bg-indigo-500 p-6 rounded-md flex justify-center">
+              <h1 class="text-white font-sans">This is a Stencil component using Tailwind</h1>
+          </div>
+        </div>
+      </Host>
+    );
   }
 }

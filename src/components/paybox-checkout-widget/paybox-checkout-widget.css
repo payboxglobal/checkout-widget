@@ -30,7 +30,886 @@
   background-color: white;
   padding: 20px;
   border-radius: 5px;
-  width: 70%;
+  width: 80%;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   margin-top: -10%;
+}
+
+:host {
+  --body-text-color: hsla(206, 62%, 9%, 1);
+  --primary-color: hsla(206, 62%, 45%, 1);
+  --body-background-color: hsla(150, 8%, 95%, 1);
+  --card-background-color: hsla(0, 0%, 100%, 1);
+  --secondary-color: hsla(146, 59%, 43%, 1);
+  --border-color: hsla(206, 61%, 9%, .4);
+  --other-color: hsla(207, 61%, 15%, 1);
+  --nav-item-background-color: hsla(206, 22%, 96%, 1);
+  --mobile-background-color: hsla(150, 8%, 95%, 1);
+  --chip-text-color: hsla(206, 62%, 9%, 0.5);
+  --chip-background-color: hsla(204, 26%, 96%, 1);
+  --error-message-color: hsla(9, 80%, 62%, 1);
+  --success-banner-border-color: hsla(160, 84%, 39%, 1);
+  --failed-banner-border-color: hsla(9, 80%, 62%, 1);
+  --pending-banner-border-color: hsla(42, 95%, 63%, 1);
+  --info-banner-border-color: hsla(194, 94%, 39%, 1);
+  --alert-banner-border-color: hsla(9, 80%, 75%, 1);
+}
+
+html {
+  font-family: 'Inter', sans-serif;
+  box-sizing: border-box;
+}
+
+*, *::after, *::before {
+  box-sizing: inherit;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  object-fit: cover;
+  height: auto;
+}
+
+#desktop-view {
+  display: none;
+}
+
+main {
+  width: 100%;
+}
+
+#mobile-view {
+  width: 100%;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 100%;
+  gap: 12px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
+#mobile-initial-page {
+  width: 100%;
+  background: var(--card-background-color);
+  display: flex;
+  flex-direction: column;
+  gap: 140px;
+}
+
+#initial-top-section {
+  background: var(--body-background-color);
+  padding: 32px 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.close-icon {
+  display: flex;
+  justify-content: end;
+}
+
+.close-icon img {
+  border: .2px solid var(--border-color);
+  border-radius: 50%;
+  padding: 12px;
+  background: var(--card-background-color);
+}
+
+#mobile-top-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#mobile-top-content #title {
+  color: var(--primary-color);
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+#mobile-top-content #subtext {
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 140%;
+}
+
+#mobile-initial-page #nav-items .nav-item {
+  list-style: none;
+}
+
+#mobile-initial-page .nav-item a {
+  text-decoration: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 12px;
+  border-top: .01px solid var(--border-color);
+}
+
+#mobile-initial-page .nav-icon-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#mobile-initial-page .nav-item a .nav-text {
+  color: var(--body-text-color);
+  font-size: 1rem;
+}
+
+.secured-container {
+  margin: 0 auto;
+  display: flex;
+  padding: 8px 12px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border: .2px solid var(--border-color);
+  border-radius: 4px;
+}
+
+.secured-text {
+  color: var(--body-text-color);
+  font-size: .875rem;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* mobile card payment view styles */
+
+#mobile-mobilemoney-page,
+#mobile-card-page,
+#mobile-cash-payment-page,
+#mobile-test-page {
+  display: none;
+}
+
+.mobile-page-setter {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.top-bar {
+  display: flex;
+  background: var(--body-background-color);
+  padding: 12px;
+  justify-content: space-between;
+  align-items: center;
+  position: fixed;
+  width: 100%;
+}
+
+.back-btn-container {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.top-bar .close-icon {
+  display: block;
+}
+
+.main-content {
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  margin-top: 100px;
+}
+
+.recipient-logo-and-texts {
+  display: flex;
+  justify-content: space-between;
+}
+
+.sender-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sender-text {
+  color: var(--body-text-color);
+  font-size: 1.25rem;
+  font-weight: 400;
+  text-align: right;
+}
+
+.sender-text #amount {
+  color: var(--secondary-color);
+  font-weight: 700;
+}
+
+.payment-content-container {
+  display: flex;
+  flex-direction: column;
+  gap: 64px;
+}
+
+.content-details {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.content-top-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.content-title {
+  font-size: 1.25rem;
+  font-weight: 400;
+}
+
+.content-text {
+  font-size: .875rem;
+  font-weight: 400;
+}
+
+.mobile-btn {
+  padding: 20px 12px;
+  border: none;
+  background: var(--primary-color);
+  color: var(--card-background-color);
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.bottom-details {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.change-btn {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border: 1px solid var(--primary-color);
+  margin: 0 auto;
+  border-radius: 4px;
+}
+
+#mobile-money-form {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+} 
+
+fieldset {
+  border: none;
+}
+
+#inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+#networks-container {
+  padding: 16px;
+  border: .1px solid var(--border-color);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* #networks {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 70%;
+  gap: 0;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+} */
+
+#networks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.network-detail {
+  display: flex;
+  align-items: center;
+}
+
+.network-container {
+  display: flex;
+  gap: 8px;
+  padding: 6px 12px;
+  align-items: center;
+  cursor: pointer;
+}
+
+.network {
+  display: none;
+}
+
+.network:checked ~ .network-container {
+  background: var(--chip-background-color);
+  border: 2.4px solid var(--primary-color);
+  border-radius: 50px;
+}
+
+#networks-label {
+  color: var(--chip-text-color);
+  font-size: .875rem;
+  font-weight: 400;
+}
+
+.network-container .network-text {
+  color: var(--chip-text-color);
+  font-size: .875rem;
+  font-weight: 400;
+  text-transform: capitalize;
+}
+
+.network:checked ~ .network-container .network-text {
+  color: var(--body-text-color);
+}
+
+#main-mobile-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#mobile-number-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  padding: 12px 16px;
+  border: .1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+#mobile-number-text {
+  color: var(--chip-text-color);
+  font-size: .875rem;
+  font-weight: 400;
+}
+
+#mobile-number {
+  font-size: 1rem;
+  font-weight: 400;
+  border: none;
+  padding: 4px;
+}
+
+#mobile-number:focus {
+  border: none;
+  outline: none;
+}
+
+#mobile-number-container:has(#mobile-number:focus) {
+  border: 2.4px solid var(--primary-color);
+}
+
+#error-container {
+  display: none;
+  gap: 4px;
+  align-items: center;
+}
+
+.error-message {
+  color: var(--error-message-color);
+  font-size: .8rem;
+  font-weight: 400;
+}
+
+#mobile-money-content,
+#cash-payment-content,
+#test-payment-content {
+  display: none;
+}
+
+#success-page {
+  display: none;
+  flex-direction: column;
+  gap: 40px;
+  max-width: 542px;
+  padding: 32px;
+  align-items: center;
+}
+
+#success-illustration {
+  max-width: 100%;
+}
+
+#success-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+#success-header-text {
+  color: var(--body-text-color);
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+#success-subtext {
+  color: var(--body-text-color);
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+#success-page button {
+  align-self: stretch;
+}
+
+.banner {
+  display: none; /* to display the banners, the value of display here will be turned to flex for the particular banner using it's id */
+  gap: 40px;
+  padding: 16px;
+  background: var(--card-background-color);
+  margin: 0 auto;
+  align-items: center;
+  border: .08px solid var(--body-text-color);
+  position: absolute;
+  top: -100px;
+  width: 100%;
+  animation: showBanner .5s ease-out forwards;
+}
+
+@keyframes showBanner {
+  100% {
+      top: 0;
+  }
+}
+
+.banner-main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: start;
+}
+
+.banner-test {
+  color: var(--body-text-color);
+  font-size: .875rem;
+  font-weight: 400;
+}
+
+.banner-close {
+  padding: 8px;
+  border: .2px solid var(--body-text-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#alert-container-mobile {
+  border-top: 4px solid var(--alert-banner-border-color);
+}
+
+#success-container-mobile {
+  border-top: 4px solid var(--success-banner-border-color);
+}
+
+#pending-container-mobile {
+  border-top: 4px solid var(--pending-banner-border-color);
+}
+
+#failed-container-mobile {
+  border-top: 4px solid var(--failed-banner-border-color);
+}
+
+#info-container-mobile {
+  border-top: 4px solid var(--info-banner-border-color);
+}
+
+/* mobile card payment view styles ends here */
+
+@media screen and (min-width: 800px) {
+  #mobile-view {
+      display: none;
+  }
+
+  #desktop-view {
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+      max-width: 800px;
+      margin: 32px auto 0;
+  }
+
+  body {
+      display: flex;
+      justify-content: center;
+      background: var(--body-background-color);
+  }
+
+  header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+  }
+
+  #header-texts {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+  }
+
+  #pay-text {
+      color: var(--body-text-color);
+      font-size: 1.25rem;
+      font-weight: 400;
+      padding: 4px 12px;
+      border-right: .2px solid var(--border-color);
+  }
+
+  #pay-text #amount {
+      color: var(--secondary-color);
+      font-weight: 700;
+  }
+
+  #main-card {
+      display: flex;
+      padding: 32px 0;
+      background: var(--card-background-color);
+      border: .11px solid var(--border-color);
+      border-radius: 4px;
+      align-items: start;
+  }
+
+  #sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+  }
+
+  #navbar-text {
+      color: var(--body-text-color);
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 8px 28px;
+  }
+
+  #main-card #navbar ul li {
+      list-style: none;
+  }
+
+  .nav-tab {
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 28px;
+  }
+
+ .nav-tab .nav-text {
+      font-size: 0.875rem;
+      font-weight: 400;
+      color: var(--body-text-color);
+  }
+
+  .nav-tab:hover {
+      background: var(--nav-item-background-color);
+  }
+
+  .active-tab {
+      background: var(--nav-item-background-color);
+      border-left: 4px solid var(--primary-color);
+      padding-left: 24px;
+  }
+
+  #main-card #navbar ul li a.active-tab svg path {
+      stroke: var(--primary-color);
+  }
+
+  #main-card #navbar ul li a.active-tab .nav-text {
+      color: var(--primary-color);
+      font-weight: 500;
+  }
+
+  #payment-method-container {
+      width: 76%;
+      padding: 0 28px;
+      border-left: .1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+  }
+
+  .payment-content {
+      display: flex;
+      flex-direction: column;
+      gap: 62px;
+  }
+
+  .first-part {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+  }
+
+  .content-top-texts {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      color: var(--body-text-color);
+  }
+
+  .content-title {
+      font-size: 1.25rem;
+      font-weight: 400;
+  }
+
+  .content-text {
+      font-size: .875rem;
+      font-weight: 400;
+  }
+
+  .desktop-btn {
+      padding: 20px 12px;
+      border: none;
+      background: var(--primary-color);
+      color: var(--card-background-color);
+      border-radius: 4px;
+      font-size: 1rem;
+      font-weight: 700;
+  }
+
+  #mobile-money-form {
+      display: flex;
+      flex-direction: column;
+      gap: 62px;
+  } 
+
+  fieldset {
+      border: none;
+  }
+
+  #inputs {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+  }
+
+  #networks-container {
+      padding: 16px;
+      border: .1px solid var(--border-color);
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+  }
+
+  #networks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+  }
+
+  .network-detail {
+      display: flex;
+      align-items: center;
+  }
+
+  .network-container {
+      display: flex;
+      gap: 8px;
+      padding: 12px 16px;
+      align-items: center;
+      cursor: pointer;
+  }
+
+  .network {
+      display: none;
+  }
+
+  .network:checked ~ .network-container {
+      background: var(--chip-background-color);
+      border: 2.4px solid var(--primary-color);
+      border-radius: 50px;
+  }
+
+  #networks-label {
+      color: var(--chip-text-color);
+      font-size: .875rem;
+      font-weight: 400;
+  }
+
+  .network-container .network-text {
+      color: var(--chip-text-color);
+      font-size: .875rem;
+      font-weight: 400;
+      text-transform: capitalize;
+  }
+
+  .network:checked ~ .network-container .network-text {
+      color: var(--body-text-color);
+  }
+
+  #main-mobile-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+  }
+
+  #mobile-number-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+      padding: 12px 16px;
+      border: .1px solid var(--border-color);
+      border-radius: 4px;
+  }
+
+  #mobile-number-text {
+      color: var(--chip-text-color);
+      font-size: .875rem;
+      font-weight: 400;
+  }
+
+  #mobile-number {
+      font-size: 1rem;
+      font-weight: 400;
+      border: none;
+      padding: 4px;
+  }
+
+  #mobile-number:focus {
+      border: none;
+      outline: none;
+  }
+
+  #mobile-number-container:has(#mobile-number:focus) {
+      border: 2.4px solid var(--primary-color);
+  }
+
+  #error-container {
+      display: none;
+      gap: 4px;
+      align-items: center;
+  }
+
+  .error-message {
+      color: var(--error-message-color);
+      font-size: .8rem;
+      font-weight: 400;
+  }
+
+  #mobile-money-content,
+  #cash-payment-content,
+  #test-payment-content {
+      display: none;
+  }
+
+  #success-page {
+      display: none;
+      flex-direction: column;
+      gap: 40px;
+      max-width: 542px;
+      padding: 32px;
+      background: var(--card-background-color);
+      border-radius: 4px;
+      border: .11px solid var(--border-color);
+      margin: 0 auto;
+      align-items: center;
+  }
+
+  #success-illustration {
+      max-width: 100%;
+  }
+
+  #success-texts {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+  }
+
+  #success-header-text {
+      color: var(--body-text-color);
+      text-align: center;
+      font-size: 1.25rem;
+      font-weight: 500;
+  }
+
+  #success-subtext {
+      color: var(--body-text-color);
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 400;
+  }
+
+  #success-page button {
+      align-self: stretch;
+  }
+
+  .banner {
+      display: none; /* to display the banners, the value of display here will be turned to flex for the particular banner using it's id */
+      gap: 40px;
+      padding: 16px;
+      background: var(--card-background-color);
+      margin: 0 auto;
+      align-items: center;
+  }
+
+  .banner-main-content {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+  }
+
+  .banner-test {
+      color: var(--body-text-color);
+      font-size: .875rem;
+      font-weight: 400;
+  }
+
+  .banner-close {
+      padding: 8px;
+      border: .2px solid var(--body-text-color);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+  }
+
+  #alert-container {
+      border-top: 4px solid var(--alert-banner-border-color);
+  }
+
+  #success-container {
+      border-top: 4px solid var(--success-banner-border-color);
+  }
+
+  #pending-container {
+      border-top: 4px solid var(--pending-banner-border-color);
+  }
+
+  #failed-container {
+      border-top: 4px solid var(--failed-banner-border-color);
+  }
+
+  #info-container {
+      border-top: 4px solid var(--info-banner-border-color);
+  }
+
 }

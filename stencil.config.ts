@@ -1,11 +1,11 @@
 import { Config } from '@stencil/core';
-import tailwind, { tailwindHMR } from 'stencil-tailwind-plugin';
+// import tailwind, { tailwindHMR } from 'stencil-tailwind-plugin';
 
 export const config: Config = {
   namespace: 'checkout-widget',
   plugins: [
-    tailwind(),
-    tailwindHMR(),
+    // tailwind(),
+    // tailwindHMR(),
   ],
   outputTargets: [
     {

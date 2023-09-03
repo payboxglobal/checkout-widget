@@ -17,11 +17,19 @@ export class PayboxCheckoutWidget {
   @Prop() curreny: string;
 
   @State() isInDeveloperMode: boolean = false;
-  @State() cashIsEnabled: boolean;
+  @State() cashIsEnabled: boolean = false;
+
+  @State() email: string;
+  @State() mode: string; // "Test", "Cash", "Mobile Money", "Card"
+  @State() payerName: string;
+  @State() payerPhone: string;
+  @State() mobileNumber: string;
+  @State() mobileNetwork: string;
 
   @Element() el: HTMLElement;
   @Event() didReset: EventEmitter;
 
+  successPage: HTMLElement;
   cardDesktopContent: HTMLElement;
   cardNavItem: HTMLAnchorElement;
   mobileMoneyDesktopContent: HTMLElement;
@@ -34,12 +42,16 @@ export class PayboxCheckoutWidget {
 
 
   placeCardContent() {
+    this.mode = "Card";
+    this.el.shadowRoot.getElementById("mobile-number").removeAttribute("required");
     const navItems = this.el.shadowRoot.querySelectorAll('.nav-tab');
     widgetScript.placeCardContent(navItems, this.cardNavItem, this.mobileMoneyDesktopContent,
       this.cashPaymentDesktopContent, this.testPaymentDesktopContent, this.cardDesktopContent);
   }
 
   placeMobileMoneyContent() {
+    this.mode = "Mobile Money";
+    this.el.shadowRoot.getElementById("mobile-number").setAttribute("required", "");
     const navItems = this.el.shadowRoot.querySelectorAll('.nav-tab');
     widgetScript.placeMobileMoneyContent(this.paymentMethodContainer, this.mobileMoneyDesktopContent, this.cardDesktopContent,
       this.cashPaymentDesktopContent, this.testPaymentDesktopContent, this.mobileMoneyNavItem, navItems
@@ -47,6 +59,8 @@ export class PayboxCheckoutWidget {
   }
 
   placeCashPaymentContent() {
+    this.mode = "Cash";
+    this.el.shadowRoot.getElementById("mobile-number").removeAttribute("required");
     const navItems = this.el.shadowRoot.querySelectorAll('.nav-tab');
     widgetScript.placeCashPaymentContent(
       this.paymentMethodContainer,
@@ -60,6 +74,8 @@ export class PayboxCheckoutWidget {
   }
 
   placeTestContent() {
+    this.mode = "Test";
+    this.el.shadowRoot.getElementById("mobile-number").removeAttribute("required");
     const navItems = this.el.shadowRoot.querySelectorAll('.nav-tab');
     widgetScript.placeTestContent(
       this.paymentMethodContainer,
@@ -83,12 +99,36 @@ export class PayboxCheckoutWidget {
     const formData = new FormData();
     // form.append("mode", mode);
     // console.log(e.currentTarget);
-    formData.append("mode", "Test");
-    formData.append("payerName", this.el.shadowRoot.querySelector<HTMLInputElement>("#payer_name").value.toString());
-    formData.append("payerPhone", this.el.shadowRoot.querySelector<HTMLInputElement>("#payer_phone").value);
-    formData.append("payerEmail", this.el.shadowRoot.querySelector<HTMLInputElement>("#payer_email").value);
-    formData.append("mobile_number", this.el.shadowRoot.querySelector<HTMLInputElement>("#mobile_number").value);
-    formData.append("mobile_network", this.el.shadowRoot.querySelector<HTMLSelectElement>("#mobile_network").value);
+    formData.append("mode", "Test");//this.mode);
+    console.log(this.payerName);
+    console.log(this.payerPhone);
+    console.log(this.email);
+    console.log(this.mode);
+    formData.append("payerName", this.payerName);
+    formData.append("payerPhone", this.payerPhone);
+    formData.append("payerEmail", this.email);
+
+
+    if (this.mode === "Mobile Money") {
+      const mobile_number = this.el.shadowRoot.querySelector<HTMLInputElement>("#mobile-number")?.value;
+      const selectedRadioButton = e.target.querySelector('input[name="network"]:checked') as HTMLInputElement;
+      const mobile_network = selectedRadioButton.value;
+      if (mobile_network === undefined || mobile_network === "" || mobile_network === null) {
+        // Todo: Give custom error to select mobile network
+        return;
+      }
+      console.log(mobile_network);
+
+      if (mobile_number === undefined || mobile_number === "" || mobile_number == null) {
+        // Todo: Give custom error to enter valid mobile number
+        return;
+      }
+      console.log(mobile_number);
+
+      formData.append("mobile_number", mobile_number);
+      formData.append("mobile_network", mobile_network);
+    }
+
     formData.append("amount", this.amount.toString());
     formData.append("currency", "GHC");
 
@@ -99,9 +139,16 @@ export class PayboxCheckoutWidget {
       },
       body: formData
     }).then(response => response.json())
-      // .then(result => console.log(result))
-      .then(result => window.location.href = "https://paybox.com.co/payment_success?token=" + result.token
-      )
+      .then((result) => {
+        console.log(result);
+        if(result.status === "Success") {
+          this.el.shadowRoot.getElementById('payment_options').className = 'hidden';
+          this.el.shadowRoot.getElementById('confirm_details').className = 'hidden';
+          this.el.shadowRoot.getElementById('success-page').className = 'flex-display';
+        }
+      })
+      // .then(result => window.location.href = "https://paybox.com.co/payment_success?token=" + result.token
+      // )
       .catch(error => console.log('error', error));
   }
 
@@ -131,25 +178,28 @@ export class PayboxCheckoutWidget {
       return;
     }
     this.el.shadowRoot.getElementById('payment_options').className = '';
-    this.el.shadowRoot.getElementById('payment_options2').className = '';
+    // this.el.shadowRoot.getElementById('payment_options2').className = '';
     this.el.shadowRoot.getElementById('confirm_details').className = 'hidden';
   }
 
   hidePaymentMethods() {
     this.el.shadowRoot.getElementById('payment_options').className = 'hidden';
-    this.el.shadowRoot.getElementById('payment_options2').className = 'hidden';
+    // this.el.shadowRoot.getElementById('payment_options2').className = 'hidden';
     this.el.shadowRoot.getElementById('confirm_details').className = '';
   }
 
   validateDetails() {
     const nameInput = this.el.shadowRoot.querySelector<HTMLInputElement>("#payer_name");
     const nameValue = nameInput.value.trim();
+    this.payerName = nameValue;
 
     const payerPhone = this.el.shadowRoot.querySelector<HTMLInputElement>("#payer_phone");
     const phoneValue = payerPhone.value.trim();
+    this.payerPhone = phoneValue;
 
     const payerEmail = this.el.shadowRoot.querySelector<HTMLInputElement>("#payer_email");
     const emailValue = payerEmail.value.trim();
+    this.email = emailValue;
 
     if (nameValue === "") {
       this.displayError(nameInput);
@@ -188,25 +238,23 @@ export class PayboxCheckoutWidget {
     if (this.merchant_key === null || this.merchant_key === "" || this.amount === null) {
       return;
     }
-    this.el.shadowRoot.querySelector<HTMLElement>("#amount").innerHTML = this.amount.toString();
-    // this.checkDeveloperMode();
+    this.el.shadowRoot.querySelectorAll<HTMLElement>(".amount-value").forEach((node) => { node.innerHTML = this.amount.toString(); });
+    this.checkUserConfigs();
     this.el.shadowRoot.querySelector<HTMLDivElement>("#modal-container").classList.remove("hidden");
     this.el.shadowRoot.querySelector<HTMLDivElement>("#modal-container").classList.add("flex-display");
   }
 
-  checkDeveloperMode() {
-    // 
-    var myHeaders = new Headers();
-    myHeaders.append("Authorization", "Bearer merchant-key");
-
+  checkUserConfigs() {
     fetch("https://paybox.com.co/api/team/" + this.merchant_key, {
       method: "GET",
     })
       .then(response => response.json())
       .then(result => {
-        console.log(result);
+        // console.log(result);
         if (result.type === "Developer") {
           this.isInDeveloperMode = true;
+        } else {
+          this.isInDeveloperMode = false;
         }
       })
       .catch(error => console.log('error', error));
@@ -311,8 +359,8 @@ export class PayboxCheckoutWidget {
                       <img src="../../assets/svg/recipient-account-logo.svg" alt="recipient logo" loading="eager" />
                     </figure>
                     <section id="header-texts">
-                      <p id="pay-text">Pay <strong id="amount">GHS 5,000</strong></p>
-                      <p id="sender-email">joshgames@gmail.com</p>
+                      <p id="pay-text">Pay <strong id="amount"><span class="amount-value">5,000</span></strong></p>
+                      <p id="sender-email">{this.email}</p>
                     </section>
                     {/* <!--This is the button that the user can click to close the modal--> */}
                     <figure class="close-icon" onClick={() => this.closeModal()}>
@@ -360,7 +408,7 @@ export class PayboxCheckoutWidget {
                               <span class="nav-text">Cash payment</span>
                             </a>
                           </li>
-                          <li class="nav-item">
+                          <li class={`${this.isInDeveloperMode ? "nav-item" : "hidden"}`}>
                             <a ref={el => (this.testNavItem = el as HTMLAnchorElement)} onClick={() => this.placeTestContent()} id="test-nav-item" class="nav-tab" href="#">
                               <svg class="navitem-icon" xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
                                 <path d="M3.41418 7.44995L12.2442 12.5599L21.0142 7.47992" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -384,7 +432,7 @@ export class PayboxCheckoutWidget {
                             <h2 class="content-title">Card</h2>
                             <p class="content-text">Click button below to make your payment with card</p>
                           </section>
-                          <button id="card-btn" class="desktop-btn">Pay GHS 5,000</button>
+                          <button id="card-btn" class="desktop-btn">Pay GHS <span class="amount-value">5,000</span></button>
                         </section>
                         <section class="secured-container">
                           <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
@@ -400,57 +448,55 @@ export class PayboxCheckoutWidget {
                             <h2 class="content-title">Mobile money</h2>
                             <p class="content-text">Fill the details to make payment with your mobile network money</p>
                           </section>
-                          <form action="" id="mobile-money-form">
-                            <fieldset id="inputs">
-                              <fieldset id="networks-container">
-                                <label id="networks-label" htmlFor="networks">Which mobile network?</label>
-                                <fieldset id="networks">
-                                  <fieldset class="network-detail">
-                                    <input class="network" type="radio" id="mtn" name="network" value="mtn" />
-                                    <label class="network-container" id="mtn-network" htmlFor="mtn">
-                                      <figure class="network-img-container">
-                                        <img class="network-img" src="../../assets/svg/mtn.svg" loading="eager" alt="mtn mobile money logo" />
-                                      </figure>
-                                      <small class="network-text">MTN Mobile Money</small>
-                                    </label>
-                                  </fieldset>
-                                  <fieldset class="network-detail">
-                                    <input class="network" type="radio" id="airtel" name="network" value="airtel" />
-                                    <label class="network-container" id="airtel-network" htmlFor="airtel">
-                                      <figure class="network-img-container">
-                                        <img class="network-img" src="../../assets/svg/airtel.svg" loading="eager" alt="airteltigo mobile money logo" />
-                                      </figure>
-                                      <small class="network-text">AIRTELTIGO Mobile Money</small>
-                                    </label>
-                                  </fieldset>
-                                  <fieldset class="network-detail">
-                                    <input class="network" type="radio" id="vodafone" name="network" value="vodafone" />
-                                    <label class="network-container" id="vodafone-network" htmlFor="vodafone">
-                                      <figure class="network-img-container">
-                                        <img class="network-img" src="../../assets/svg/vodafone.svg" loading="eager" alt="vodafone mobile money logo" />
-                                      </figure>
-                                      <small class="network-text">VODAFONE Mobile Money</small>
-                                    </label>
-                                  </fieldset>
+                          <fieldset id="inputs">
+                            <fieldset id="networks-container">
+                              <label id="networks-label" htmlFor="networks">Which mobile network?</label>
+                              <fieldset id="networks">
+                                <fieldset class="network-detail">
+                                  <input class="network" type="radio" id="mtn" name="network" value="MTN" />
+                                  <label class="network-container" id="mtn-network" htmlFor="mtn">
+                                    <figure class="network-img-container">
+                                      <img class="network-img" src="../../assets/svg/mtn.svg" loading="eager" alt="mtn mobile money logo" />
+                                    </figure>
+                                    <small class="network-text">MTN Mobile Money</small>
+                                  </label>
                                 </fieldset>
-                              </fieldset>
-                              <fieldset id="main-mobile-container">
-                                <fieldset id="mobile-number-container">
-                                  <label htmlFor="mobile-number" id="mobile-number-text">What’s your mobile number?</label>
-                                  <input type="text" id="mobile-number" placeholder="E.g 810 403 2034" />
+                                <fieldset class="network-detail">
+                                  <input class="network" type="radio" id="airtel" name="network" value="AIRTELTIGO" />
+                                  <label class="network-container" id="airtel-network" htmlFor="airtel">
+                                    <figure class="network-img-container">
+                                      <img class="network-img" src="../../assets/svg/airtel.svg" loading="eager" alt="airteltigo mobile money logo" />
+                                    </figure>
+                                    <small class="network-text">AIRTELTIGO Mobile Money</small>
+                                  </label>
                                 </fieldset>
-                                <section id="error-container">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                    <path d="M7.99998 14.6666C11.6666 14.6666 14.6666 11.6666 14.6666 7.99998C14.6666 4.33331 11.6666 1.33331 7.99998 1.33331C4.33331 1.33331 1.33331 4.33331 1.33331 7.99998C1.33331 11.6666 4.33331 14.6666 7.99998 14.6666Z" stroke="#EC6952" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M8 5.33331V8.66665" stroke="#EC6952" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M7.99634 10.6667H8.00233" stroke="#EC6952" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                  </svg>
-                                  <p class="error-message">Mobile number not valid, ensure it's in this format: <strong>810 403 2034</strong></p>
-                                </section>
+                                <fieldset class="network-detail">
+                                  <input class="network" type="radio" id="vodafone" name="network" value="VODAFONE" />
+                                  <label class="network-container" id="vodafone-network" htmlFor="vodafone">
+                                    <figure class="network-img-container">
+                                      <img class="network-img" src="../../assets/svg/vodafone.svg" loading="eager" alt="vodafone mobile money logo" />
+                                    </figure>
+                                    <small class="network-text">VODAFONE Mobile Money</small>
+                                  </label>
+                                </fieldset>
                               </fieldset>
                             </fieldset>
-                            <input id="mobile-money-btn" type="submit" class="desktop-btn" value="Pay GHS 5,000" />
-                          </form>
+                            <fieldset id="main-mobile-container">
+                              <fieldset id="mobile-number-container">
+                                <label htmlFor="mobile-number" id="mobile-number-text">What’s your mobile number?</label>
+                                <input type="text" id="mobile-number" name="mobile_number" placeholder="+233 54 923 2369" required />
+                              </fieldset>
+                              <section id="error-container">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                  <path d="M7.99998 14.6666C11.6666 14.6666 14.6666 11.6666 14.6666 7.99998C14.6666 4.33331 11.6666 1.33331 7.99998 1.33331C4.33331 1.33331 1.33331 4.33331 1.33331 7.99998C1.33331 11.6666 4.33331 14.6666 7.99998 14.6666Z" stroke="#EC6952" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                  <path d="M8 5.33331V8.66665" stroke="#EC6952" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                  <path d="M7.99634 10.6667H8.00233" stroke="#EC6952" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <p class="error-message">Mobile number not valid, ensure it's in this format: <strong>810 403 2034</strong></p>
+                              </section>
+                            </fieldset>
+                          </fieldset>
+                          <button id="card-btn" class="desktop-btn">Pay GHS <span class="amount-value">5,000</span></button>
                         </section>
                         <section class="secured-container">
                           <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
@@ -466,7 +512,7 @@ export class PayboxCheckoutWidget {
                             <h2 class="content-title">Cash payment</h2>
                             <p class="content-text">Click button below to make your payment with card</p>
                           </section>
-                          <button id="card-btn" class="desktop-btn">Pay GHS 5,000</button>
+                          <button id="card-btn" class="desktop-btn">Pay GHS <span class="amount-value">5,000</span></button>
                         </section>
                         <section class="secured-container">
                           <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
@@ -476,15 +522,15 @@ export class PayboxCheckoutWidget {
                         </section>
                       </section>
                       {/* <!--This is the container that shows the content of the test payment when selected--> */}
-                      <section ref={el => (this.testPaymentDesktopContent = el as HTMLElement)} id="test-payment-content" class="payment-content">
-                        <section class="first-part">
-                          <section class="content-top-texts">
+                      <section ref={el => (this.testPaymentDesktopContent = el as HTMLElement)} id="test-payment-content" class={`${this.isInDeveloperMode ? "payment-content" : "hidden"}`}>
+                        <section class={`${this.isInDeveloperMode ? "first-part" : "hidden"}`}>
+                          <section class={`${this.isInDeveloperMode ? "content-top-texts" : "hidden"}`}>
                             <h2 class="content-title">Test</h2>
                             <p class="content-text">Click button below to test out the payment system</p>
                           </section>
-                          <button id="card-btn" class="desktop-btn">Pay GHS 5,000</button>
+                          <button id="card-btn" class="desktop-btn">Pay GHS <span class="amount-value">5,000</span></button>
                         </section>
-                        <section class="secured-container">
+                        <section class={`${this.isInDeveloperMode ? "secured-container" : "hidden"}`}>
                           <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
                             <path d="M18.5 7.00989C18.5 3.76989 15.741 1.00989 12.5 1.00989C9.257 1.00989 6.5 3.76989 6.5 7.00989V9.73289C5.21101 11.1885 4.49957 13.0656 4.5 15.0099C4.5 19.4259 8.084 23.0099 12.501 23.0099C16.918 23.0099 20.5 19.4259 20.5 15.0099C20.5006 13.0653 19.7891 11.1878 18.5 9.73189V7.00989ZM8.5 7.00989C8.5 4.87889 10.369 3.00989 12.5 3.00989C14.631 3.00989 16.5 4.87889 16.5 7.00989V8.08889C15.2853 7.38236 13.9051 7.01025 12.4999 7.01042C11.0946 7.0106 9.71453 7.38306 8.5 8.08989V7.00989ZM11 19.4239L7.293 15.7169L8.707 14.3029L11 16.5959L16.293 11.3029L17.707 12.7169L11 19.4239Z" fill="#2C7CB9" />
                           </svg>
@@ -492,28 +538,6 @@ export class PayboxCheckoutWidget {
                         </section>
                       </section>
                     </section>
-                  </section>
-                  {/* <!--This is the success page that comes up when the user has successfully completed their transaction using any payment method--> */}
-                  <section id="success-page">
-                    <svg id="success-illustration" xmlns="http://www.w3.org/2000/svg" width="190" height="197" viewBox="0 0 190 197" fill="none">
-                      <g clip-path="url(#clip0_202_52)">
-                        <path d="M189.014 0H0.98584V196.057H189.014V0Z" fill="white" />
-                        <path d="M188.736 134.563C188.251 129.268 187.055 124.064 185.18 119.089C184.226 116.541 183.09 114.066 181.781 111.681C180.423 109.25 178.882 106.925 177.172 104.726C175.425 102.49 173.498 100.401 171.41 98.4793C169.386 96.6475 167.241 94.9536 164.99 93.4092C162.85 91.9606 160.694 90.6684 158.571 89.4996C156.447 88.3308 154.365 87.3185 152.315 86.3719C148.2 84.4871 144.34 82.9233 140.735 81.4335C136.619 79.7216 132.759 78.1413 129.607 76.4046C126.935 75.0616 124.484 73.3185 122.339 71.2357C121.533 70.4212 120.828 69.5119 120.24 68.5278C119.618 67.4619 119.102 66.3371 118.701 65.1697C118.166 63.5798 117.732 61.9579 117.401 60.3136C117.006 58.4534 116.652 56.3711 116.257 54.0665C115.862 51.7619 115.434 49.3092 114.882 46.6589C114.276 43.781 113.498 40.9418 112.553 38.1566C110.451 32.14 107.311 26.5381 103.277 21.6047C95.4219 11.9728 84.7315 5.06095 72.7245 1.85103C66.6241 0.212768 60.284 -0.344361 53.9914 0.204891C47.7518 0.791086 41.6598 2.44774 35.9827 5.10216C24.8861 10.2862 15.6987 18.8257 9.71859 29.5144C6.68048 34.9431 4.61894 40.863 3.62786 47.0046C2.67889 53.0948 2.77915 59.3025 3.9242 65.359C3.9242 65.4907 3.9818 65.6142 4.00649 65.7458C3.74311 66.2726 3.48793 66.8076 3.26571 67.392C2.63506 68.9306 2.13398 70.5191 1.76771 72.1411C1.57018 73.1946 1.38089 74.2564 1.22451 75.3264L1.09284 76.9231L0.98584 78.4376C0.98584 79.4417 0.985838 80.4458 1.03522 81.45C1.08461 82.4541 1.21628 83.4171 1.33151 84.4048C1.88236 88.1357 2.99224 91.7622 4.62379 95.1623C5.75264 97.5176 7.11477 99.7538 8.68975 101.837C10.3908 104.122 12.3214 106.226 14.4512 108.117C14.9862 108.628 15.5541 109.105 16.1467 109.574C16.7394 110.043 17.3073 110.529 17.941 110.965C18.5748 111.401 19.2003 111.871 19.8258 112.282L21.6613 113.443C24.0948 114.895 26.6216 116.184 29.2253 117.303C33.85 119.236 38.5954 120.866 43.4315 122.184C47.695 123.385 51.4152 124.389 54.2466 125.295C57.5226 126.296 60.738 127.486 63.8765 128.859C66.4648 129.971 68.8771 131.454 71.0372 133.262C71.9294 134.064 72.7374 134.955 73.4488 135.921C74.2404 137.05 74.9291 138.248 75.5065 139.501C76.1684 140.989 76.7509 142.511 77.2514 144.061C77.7864 145.707 78.272 147.452 78.7493 149.296L79.5724 152.275C79.8687 153.32 80.1321 154.333 80.4696 155.427C81.0869 157.567 81.8523 159.847 82.7659 162.168L83.4985 163.921C83.7618 164.522 84.0664 165.14 84.3215 165.74C84.8812 166.967 85.5726 168.119 86.2311 169.288C87.6006 171.582 89.1529 173.762 90.8731 175.807C92.5658 177.823 94.4034 179.712 96.3712 181.461C98.321 183.171 100.386 184.744 102.552 186.169C106.822 188.988 111.443 191.235 116.298 192.852C121.135 194.491 126.16 195.512 131.253 195.889C136.456 196.287 141.69 195.975 146.809 194.959C152.126 193.899 157.248 192.025 161.995 189.404C166.841 186.678 171.206 183.174 174.917 179.033C178.517 174.952 181.485 170.355 183.723 165.395C185.9 160.555 187.417 155.444 188.234 150.201C189.064 145.031 189.233 139.776 188.736 134.563ZM70.0824 60.8897L68.9219 60.791L67.8354 60.6757L65.6955 60.437C64.395 60.2313 63.0205 60.0667 61.9011 59.8033C60.7817 59.5399 59.72 59.2518 58.6665 58.9802C57.8216 58.6856 56.9968 58.3365 56.1972 57.9349C55.5705 57.6496 54.9725 57.3051 54.4112 56.9061C55.7857 56.6427 56.9627 56.083 58.0245 55.869C58.7227 55.6822 59.4319 55.5392 60.148 55.441C60.8312 55.334 61.5143 55.1859 62.3703 55.0048C64.4611 54.509 66.6107 54.3068 68.7573 54.4039C69.6319 54.4498 70.5001 54.5794 71.35 54.7908L71.1524 56.9061C71.0043 58.3465 70.8808 59.688 70.7573 60.9309L70.0824 60.8897ZM141.829 135.707C142.833 135.962 143.813 136.176 144.776 136.357C144.62 136.653 144.438 136.933 144.29 137.229L143.903 137.764C143.793 137.947 143.66 138.116 143.508 138.266C143.037 138.873 142.483 139.41 141.862 139.863C141.725 139.955 141.593 140.054 141.467 140.159C141.309 140.234 141.155 140.316 141.006 140.406C140.85 140.507 140.681 140.587 140.504 140.645C140.338 140.735 140.164 140.812 139.986 140.876C139.2 141.152 138.39 141.35 137.566 141.468C136.714 141.546 135.858 141.546 135.006 141.468C133.621 141.326 132.298 140.821 131.171 140.003C131.11 139.969 131.052 139.931 130.998 139.888C130.998 139.838 130.915 139.797 130.874 139.748C130.833 139.699 130.693 139.624 130.578 139.476C130.32 139.193 130.081 138.893 129.862 138.579C129.565 138.192 129.29 137.788 129.039 137.369C128.907 137.139 128.775 136.842 128.636 136.546L128.43 136.151L128.224 135.69L127.796 134.744L127.376 133.665C127.236 133.32 127.088 132.925 126.948 132.513L126.512 131.287C125.977 129.641 125.434 128.044 124.866 126.414C129.748 130.749 135.547 133.923 141.829 135.698V135.707ZM114.734 164.646C111.188 162.264 108.253 159.08 106.166 155.353C105.944 154.892 105.713 154.44 105.474 153.987L104.799 152.415C104.585 151.847 104.363 151.312 104.157 150.719C103.952 150.127 103.762 149.6 103.565 148.991C103.672 149.197 103.762 149.394 103.861 149.6C105.491 152.831 107.554 155.824 109.993 158.497C112.706 161.393 115.9 163.796 119.434 165.601C122.792 167.326 126.404 168.504 130.134 169.09C135.552 169.967 141.095 169.687 146.397 168.267C144.53 169.092 142.575 169.702 140.57 170.086C131.577 171.698 122.31 169.744 114.734 164.638V164.646Z" fill="#E8F1F8" />
-                        <path d="M1.26407 134.563C1.74877 129.268 2.94475 124.064 4.81974 119.089C5.77376 116.541 6.9098 114.066 8.21902 111.681C9.57711 109.25 11.118 106.925 12.8282 104.726C14.575 102.49 16.5019 100.401 18.5897 98.4793C20.6138 96.6475 22.7587 94.9536 25.0097 93.4092C27.1496 91.9606 29.3061 90.6684 31.4296 89.4996C33.5531 88.3308 35.6355 87.3185 37.6849 86.3719C41.8002 84.4871 45.6604 82.9233 49.2655 81.4335C53.3808 79.7216 57.241 78.1413 60.3934 76.4046C63.0649 75.0616 65.5157 73.3185 67.661 71.2357C68.4675 70.4212 69.1722 69.5119 69.7599 68.5278C70.3824 67.4619 70.8979 66.3371 71.299 65.1697C71.8337 63.5798 72.268 61.9579 72.5995 60.3136C72.9945 58.4534 73.3485 56.3711 73.7435 54.0665C74.1386 51.7619 74.5666 49.3092 75.118 46.6589C75.7246 43.781 76.5024 40.9418 77.4473 38.1566C79.5492 32.14 82.6887 26.5381 86.7233 21.6047C94.5783 11.9728 105.269 5.06095 117.276 1.85103C123.376 0.212768 129.716 -0.344361 136.009 0.204891C142.248 0.791086 148.34 2.44774 154.017 5.10216C165.114 10.2862 174.301 18.8257 180.282 29.5144C183.32 34.9431 185.381 40.863 186.372 47.0046C187.321 53.0948 187.221 59.3025 186.076 65.359C186.076 65.4907 186.018 65.6142 185.994 65.7458C186.257 66.2726 186.512 66.8076 186.734 67.392C187.365 68.9306 187.866 70.5191 188.232 72.1411C188.43 73.1946 188.619 74.2564 188.776 75.3264L188.907 76.9231L189.014 78.4376C189.014 79.4417 189.014 80.4458 188.965 81.45C188.916 82.4541 188.784 83.4171 188.669 84.4048C188.118 88.1357 187.008 91.7622 185.376 95.1623C184.247 97.5176 182.885 99.7538 181.31 101.837C179.609 104.122 177.679 106.226 175.549 108.117C175.014 108.628 174.446 109.105 173.853 109.574C173.261 110.043 172.693 110.529 172.059 110.965C171.425 111.401 170.8 111.871 170.174 112.282L168.339 113.443C165.905 114.895 163.378 116.184 160.775 117.303C156.15 119.236 151.405 120.866 146.569 122.184C142.305 123.385 138.585 124.389 135.754 125.295C132.477 126.296 129.262 127.486 126.124 128.859C123.535 129.971 121.123 131.454 118.963 133.262C118.071 134.064 117.263 134.955 116.551 135.921C115.76 137.05 115.071 138.248 114.494 139.501C113.832 140.989 113.249 142.511 112.749 144.061C112.214 145.707 111.728 147.452 111.251 149.296L110.428 152.275C110.131 153.32 109.868 154.333 109.531 155.427C108.913 157.567 108.148 159.847 107.234 162.168L106.502 163.921C106.238 164.522 105.934 165.14 105.679 165.74C105.119 166.967 104.428 168.119 103.769 169.288C102.4 171.582 100.847 173.762 99.127 175.807C97.4343 177.823 95.5967 179.712 93.6289 181.461C91.6791 183.171 89.6138 184.744 87.4476 186.169C83.178 188.988 78.5567 191.235 73.7024 192.852C68.8653 194.491 63.8404 195.512 58.7473 195.889C53.5437 196.287 48.3103 195.975 43.1912 194.959C37.8738 193.899 32.7517 192.025 28.0056 189.404C23.1593 186.678 18.7937 183.174 15.0834 179.033C11.4832 174.952 8.51467 170.355 6.27659 165.395C4.10052 160.555 2.58347 155.444 1.76613 150.201C0.936152 145.031 0.767451 139.776 1.26407 134.563ZM119.918 60.8897L121.078 60.791L122.165 60.6757L124.305 60.437C125.605 60.2313 126.98 60.0667 128.099 59.8033C129.218 59.5399 130.28 59.2518 131.334 58.9802C132.179 58.6856 133.003 58.3365 133.803 57.9349C134.43 57.6496 135.028 57.3051 135.589 56.9061C134.214 56.6427 133.037 56.083 131.976 55.869C131.277 55.6822 130.568 55.5392 129.852 55.441C129.169 55.334 128.486 55.1859 127.63 55.0048C125.539 54.509 123.389 54.3068 121.243 54.4039C120.368 54.4498 119.5 54.5794 118.65 54.7908L118.848 56.9061C118.996 58.3465 119.119 59.688 119.243 60.9309L119.918 60.8897ZM48.1708 135.707C47.1666 135.962 46.1872 136.176 45.2242 136.357C45.3806 136.653 45.5617 136.933 45.7098 137.229L46.0967 137.764C46.2072 137.947 46.3399 138.116 46.4917 138.266C46.9633 138.873 47.5173 139.41 48.1379 139.863C48.2749 139.955 48.4068 140.054 48.5329 140.159C48.6908 140.234 48.8447 140.316 48.9939 140.406C49.1503 140.507 49.3191 140.587 49.496 140.645C49.6626 140.735 49.8359 140.812 50.0145 140.876C50.7997 141.152 51.6102 141.35 52.4343 141.468C53.2857 141.546 54.1426 141.546 54.994 141.468C56.3792 141.326 57.7023 140.821 58.8295 140.003C58.8902 139.969 58.9481 139.931 59.0024 139.888C59.0024 139.838 59.0847 139.797 59.1258 139.748C59.167 139.699 59.3069 139.624 59.4222 139.476C59.6797 139.193 59.9189 138.893 60.1382 138.579C60.4351 138.192 60.7099 137.788 60.9613 137.369C61.093 137.139 61.2247 136.842 61.3646 136.546L61.5704 136.151L61.7761 135.69L62.2041 134.744L62.6239 133.665C62.7638 133.32 62.912 132.925 63.0519 132.513L63.4881 131.287C64.0231 129.641 64.5664 128.044 65.1343 126.414C60.2526 130.749 54.4533 133.923 48.1708 135.698V135.707ZM75.2662 164.646C78.8121 162.264 81.7473 159.08 83.8344 155.353C84.0566 154.892 84.2871 154.44 84.5258 153.987L85.2006 152.415C85.4146 151.847 85.6369 151.312 85.8427 150.719C86.0484 150.127 86.2377 149.6 86.4352 148.991C86.3282 149.197 86.2377 149.394 86.1389 149.6C84.5088 152.831 82.4458 155.824 80.0071 158.497C77.294 161.393 74.0999 163.796 70.5665 165.601C67.2084 167.326 63.5963 168.504 59.8666 169.09C54.448 169.967 48.9051 169.687 43.6028 168.267C45.4702 169.092 47.4251 169.702 49.4301 170.086C58.423 171.698 67.6901 169.744 75.2662 164.638V164.646Z" fill="#E8F1F8" />
-                        <path d="M110.281 136.874C107.919 136.865 105.62 136.104 103.719 134.702L96.9688 129.764C96.1313 129.148 95.1184 128.815 94.0782 128.815C93.0381 128.815 92.0252 129.148 91.1876 129.764L84.4376 134.702C82.6921 135.977 80.6138 136.717 78.4554 136.833C76.2971 136.948 74.1516 136.435 72.2797 135.354C70.4078 134.273 68.8902 132.672 67.9113 130.745C66.9324 128.818 66.5345 126.648 66.7657 124.499L67.672 116.186C67.7883 115.153 67.5703 114.11 67.0501 113.21C66.5298 112.31 65.7346 111.601 64.7813 111.186L57.1407 107.811C55.1583 106.942 53.472 105.514 52.288 103.702C51.1039 101.89 50.4733 99.7726 50.4733 97.6081C50.4733 95.4435 51.1039 93.3258 52.288 91.5138C53.472 89.7019 55.1583 88.2741 57.1407 87.4049L64.7813 84.0299C65.7346 83.6153 66.5298 82.9059 67.0501 82.006C67.5703 81.106 67.7883 80.0629 67.672 79.0299L66.7657 70.7174C66.5345 68.5684 66.9324 66.3984 67.9113 64.4713C68.8902 62.5442 70.4078 60.943 72.2797 59.8622C74.1516 58.7815 76.2971 58.2677 78.4554 58.3835C80.6138 58.4993 82.6921 59.2395 84.4376 60.5143L91.1876 65.4518C92.0252 66.0686 93.0381 66.4013 94.0782 66.4013C95.1184 66.4013 96.1313 66.0686 96.9688 65.4518L103.719 60.5143C104.921 59.6246 106.293 58.9909 107.749 58.6523C109.206 58.3137 110.716 58.2773 112.188 58.5456C113.691 58.8183 115.123 59.3921 116.398 60.2326C117.674 61.073 118.766 62.1627 119.609 63.4362C119.843 63.7787 120.007 64.1644 120.09 64.5707C120.173 64.977 120.175 65.3958 120.095 65.8027C120.014 66.2096 119.854 66.5964 119.623 66.9407C119.391 67.285 119.094 67.5798 118.748 67.808C118.401 68.0361 118.013 68.193 117.605 68.2695C117.198 68.3461 116.779 68.3407 116.373 68.2538C115.968 68.1668 115.584 68 115.243 67.763C114.903 67.5261 114.613 67.2238 114.391 66.8737C114.014 66.307 113.526 65.8224 112.956 65.4492C112.387 65.076 111.748 64.8217 111.078 64.7018C110.433 64.5828 109.77 64.6006 109.132 64.7541C108.494 64.9075 107.896 65.1931 107.375 65.5924L100.625 70.5299C98.7147 71.9302 96.4078 72.6851 94.0392 72.6851C91.6706 72.6851 89.3636 71.9302 87.4532 70.5299L80.7188 65.5924C79.9535 65.0113 79.0339 64.6685 78.075 64.6069C77.116 64.5453 76.1601 64.7676 75.3267 65.2459C74.4933 65.7243 73.8193 66.4376 73.3888 67.2968C72.9584 68.1559 72.7906 69.1229 72.9063 70.0768L73.8126 78.3737C74.085 80.7214 73.6016 83.0947 72.4326 85.1488C71.2637 87.2029 69.4701 88.8307 67.3126 89.7956L59.6563 93.1706C58.7885 93.5557 58.0511 94.1845 57.5336 94.9804C57.016 95.7764 56.7405 96.7055 56.7405 97.6549C56.7405 98.6044 57.016 99.5335 57.5336 100.329C58.0511 101.125 58.7885 101.754 59.6563 102.139L67.3126 105.421C69.4819 106.372 71.2902 107.992 72.4736 110.044C73.657 112.096 74.1535 114.473 73.8907 116.827L72.9845 125.124C72.8687 126.078 73.0365 127.045 73.4669 127.904C73.8974 128.763 74.5714 129.476 75.4048 129.955C76.2382 130.433 77.1941 130.655 78.1531 130.594C79.1121 130.532 80.0316 130.189 80.797 129.608L87.5313 124.671C89.4417 123.27 91.7487 122.515 94.1173 122.515C96.4859 122.515 98.7928 123.27 100.703 124.671L107.453 129.608C108.219 130.189 109.138 130.532 110.097 130.594C111.056 130.655 112.012 130.433 112.845 129.955C113.679 129.476 114.353 128.763 114.783 127.904C115.214 127.045 115.382 126.078 115.266 125.124L114.359 116.827C114.087 114.483 114.569 112.114 115.735 110.062C116.901 108.011 118.691 106.385 120.844 105.421L128.5 102.046C129.368 101.66 130.105 101.032 130.623 100.236C131.14 99.4397 131.416 98.5106 131.416 97.5612C131.416 96.6117 131.14 95.6827 130.623 94.8867C130.105 94.0907 129.368 93.462 128.5 93.0768L124.344 91.3581C123.957 91.2006 123.606 90.9671 123.311 90.6715C123.016 90.3759 122.783 90.0241 122.626 89.637C122.469 89.2499 122.392 88.8352 122.398 88.4176C122.404 88 122.494 87.5878 122.662 87.2055C122.83 86.8232 123.073 86.4785 123.377 86.1917C123.681 85.9049 124.039 85.682 124.43 85.536C124.821 85.39 125.238 85.3239 125.655 85.3416C126.072 85.3594 126.482 85.4606 126.859 85.6393L131.016 87.4674C132.998 88.3366 134.684 89.7644 135.868 91.5763C137.053 93.3883 137.683 95.506 137.683 97.6706C137.683 99.8351 137.053 101.953 135.868 103.765C134.684 105.577 132.998 107.005 131.016 107.874L123.375 111.249C122.422 111.665 121.626 112.374 121.104 113.273C120.581 114.172 120.359 115.215 120.469 116.249L121.375 124.561C121.637 126.713 121.255 128.893 120.275 130.827C119.296 132.76 117.765 134.359 115.875 135.421C114.17 136.386 112.241 136.887 110.281 136.874Z" fill="#2C7FB9" />
-                        <path d="M94.4376 108.546C94.0252 108.546 93.6169 108.465 93.2361 108.306C92.8553 108.148 92.5096 107.916 92.2188 107.624L78.7657 94.1706C78.4304 93.8919 78.1571 93.5462 77.9634 93.1556C77.7697 92.765 77.6599 92.3382 77.641 91.9026C77.6221 91.467 77.6946 91.0323 77.8537 90.6264C78.0129 90.2205 78.2552 89.8524 78.5652 89.5457C78.8751 89.2391 79.2458 89.0007 79.6533 88.8459C80.0609 88.691 80.4964 88.6232 80.9317 88.6467C81.3671 88.6703 81.7927 88.7846 82.1812 88.9825C82.5697 89.1804 82.9125 89.4573 83.1876 89.7956L94.4376 101.046L134.188 61.2331C134.783 60.6955 135.562 60.4074 136.364 60.4286C137.166 60.4497 137.929 60.7785 138.495 61.3467C139.062 61.9149 139.388 62.6792 139.406 63.4812C139.424 64.2831 139.134 65.0615 138.594 65.6549L96.6407 107.608C96.3531 107.901 96.0105 108.135 95.6325 108.296C95.2545 108.457 94.8484 108.542 94.4376 108.546Z" fill="#2C7FB9" />
-                      </g>
-                      <defs>
-                        <clipPath id="clip0_202_52">
-                          <rect width="190" height="197" fill="white" />
-                        </clipPath>
-                      </defs>
-                    </svg>
-                    <section id="success-texts">
-                      <h1 id="success-header-text">Payment done!</h1>
-                      <p id="success-subtext">You've successfully paid PayBox GHS 5,000 from your account.</p>
-                    </section>
-                    <button id="card-btn" class="desktop-btn">Close</button>
                   </section>
                   {/* <!--This is the banner for any alert message that comes up based on the user's actions--> */}
                   <section class="banner" id="alert-container">
@@ -601,23 +625,46 @@ export class PayboxCheckoutWidget {
               </div>
             </form>
 
+            {/* <!--This is the success page that comes up when the user has successfully completed their transaction using any payment method--> */}
+            <section ref={el => (this.successPage = el as HTMLElement)} id="success-page" class="hidden">
+              <svg id="success-illustration" xmlns="http://www.w3.org/2000/svg" width="190" height="197" viewBox="0 0 190 197" fill="none">
+                <g clip-path="url(#clip0_202_52)">
+                  <path d="M189.014 0H0.98584V196.057H189.014V0Z" fill="white" />
+                  <path d="M188.736 134.563C188.251 129.268 187.055 124.064 185.18 119.089C184.226 116.541 183.09 114.066 181.781 111.681C180.423 109.25 178.882 106.925 177.172 104.726C175.425 102.49 173.498 100.401 171.41 98.4793C169.386 96.6475 167.241 94.9536 164.99 93.4092C162.85 91.9606 160.694 90.6684 158.571 89.4996C156.447 88.3308 154.365 87.3185 152.315 86.3719C148.2 84.4871 144.34 82.9233 140.735 81.4335C136.619 79.7216 132.759 78.1413 129.607 76.4046C126.935 75.0616 124.484 73.3185 122.339 71.2357C121.533 70.4212 120.828 69.5119 120.24 68.5278C119.618 67.4619 119.102 66.3371 118.701 65.1697C118.166 63.5798 117.732 61.9579 117.401 60.3136C117.006 58.4534 116.652 56.3711 116.257 54.0665C115.862 51.7619 115.434 49.3092 114.882 46.6589C114.276 43.781 113.498 40.9418 112.553 38.1566C110.451 32.14 107.311 26.5381 103.277 21.6047C95.4219 11.9728 84.7315 5.06095 72.7245 1.85103C66.6241 0.212768 60.284 -0.344361 53.9914 0.204891C47.7518 0.791086 41.6598 2.44774 35.9827 5.10216C24.8861 10.2862 15.6987 18.8257 9.71859 29.5144C6.68048 34.9431 4.61894 40.863 3.62786 47.0046C2.67889 53.0948 2.77915 59.3025 3.9242 65.359C3.9242 65.4907 3.9818 65.6142 4.00649 65.7458C3.74311 66.2726 3.48793 66.8076 3.26571 67.392C2.63506 68.9306 2.13398 70.5191 1.76771 72.1411C1.57018 73.1946 1.38089 74.2564 1.22451 75.3264L1.09284 76.9231L0.98584 78.4376C0.98584 79.4417 0.985838 80.4458 1.03522 81.45C1.08461 82.4541 1.21628 83.4171 1.33151 84.4048C1.88236 88.1357 2.99224 91.7622 4.62379 95.1623C5.75264 97.5176 7.11477 99.7538 8.68975 101.837C10.3908 104.122 12.3214 106.226 14.4512 108.117C14.9862 108.628 15.5541 109.105 16.1467 109.574C16.7394 110.043 17.3073 110.529 17.941 110.965C18.5748 111.401 19.2003 111.871 19.8258 112.282L21.6613 113.443C24.0948 114.895 26.6216 116.184 29.2253 117.303C33.85 119.236 38.5954 120.866 43.4315 122.184C47.695 123.385 51.4152 124.389 54.2466 125.295C57.5226 126.296 60.738 127.486 63.8765 128.859C66.4648 129.971 68.8771 131.454 71.0372 133.262C71.9294 134.064 72.7374 134.955 73.4488 135.921C74.2404 137.05 74.9291 138.248 75.5065 139.501C76.1684 140.989 76.7509 142.511 77.2514 144.061C77.7864 145.707 78.272 147.452 78.7493 149.296L79.5724 152.275C79.8687 153.32 80.1321 154.333 80.4696 155.427C81.0869 157.567 81.8523 159.847 82.7659 162.168L83.4985 163.921C83.7618 164.522 84.0664 165.14 84.3215 165.74C84.8812 166.967 85.5726 168.119 86.2311 169.288C87.6006 171.582 89.1529 173.762 90.8731 175.807C92.5658 177.823 94.4034 179.712 96.3712 181.461C98.321 183.171 100.386 184.744 102.552 186.169C106.822 188.988 111.443 191.235 116.298 192.852C121.135 194.491 126.16 195.512 131.253 195.889C136.456 196.287 141.69 195.975 146.809 194.959C152.126 193.899 157.248 192.025 161.995 189.404C166.841 186.678 171.206 183.174 174.917 179.033C178.517 174.952 181.485 170.355 183.723 165.395C185.9 160.555 187.417 155.444 188.234 150.201C189.064 145.031 189.233 139.776 188.736 134.563ZM70.0824 60.8897L68.9219 60.791L67.8354 60.6757L65.6955 60.437C64.395 60.2313 63.0205 60.0667 61.9011 59.8033C60.7817 59.5399 59.72 59.2518 58.6665 58.9802C57.8216 58.6856 56.9968 58.3365 56.1972 57.9349C55.5705 57.6496 54.9725 57.3051 54.4112 56.9061C55.7857 56.6427 56.9627 56.083 58.0245 55.869C58.7227 55.6822 59.4319 55.5392 60.148 55.441C60.8312 55.334 61.5143 55.1859 62.3703 55.0048C64.4611 54.509 66.6107 54.3068 68.7573 54.4039C69.6319 54.4498 70.5001 54.5794 71.35 54.7908L71.1524 56.9061C71.0043 58.3465 70.8808 59.688 70.7573 60.9309L70.0824 60.8897ZM141.829 135.707C142.833 135.962 143.813 136.176 144.776 136.357C144.62 136.653 144.438 136.933 144.29 137.229L143.903 137.764C143.793 137.947 143.66 138.116 143.508 138.266C143.037 138.873 142.483 139.41 141.862 139.863C141.725 139.955 141.593 140.054 141.467 140.159C141.309 140.234 141.155 140.316 141.006 140.406C140.85 140.507 140.681 140.587 140.504 140.645C140.338 140.735 140.164 140.812 139.986 140.876C139.2 141.152 138.39 141.35 137.566 141.468C136.714 141.546 135.858 141.546 135.006 141.468C133.621 141.326 132.298 140.821 131.171 140.003C131.11 139.969 131.052 139.931 130.998 139.888C130.998 139.838 130.915 139.797 130.874 139.748C130.833 139.699 130.693 139.624 130.578 139.476C130.32 139.193 130.081 138.893 129.862 138.579C129.565 138.192 129.29 137.788 129.039 137.369C128.907 137.139 128.775 136.842 128.636 136.546L128.43 136.151L128.224 135.69L127.796 134.744L127.376 133.665C127.236 133.32 127.088 132.925 126.948 132.513L126.512 131.287C125.977 129.641 125.434 128.044 124.866 126.414C129.748 130.749 135.547 133.923 141.829 135.698V135.707ZM114.734 164.646C111.188 162.264 108.253 159.08 106.166 155.353C105.944 154.892 105.713 154.44 105.474 153.987L104.799 152.415C104.585 151.847 104.363 151.312 104.157 150.719C103.952 150.127 103.762 149.6 103.565 148.991C103.672 149.197 103.762 149.394 103.861 149.6C105.491 152.831 107.554 155.824 109.993 158.497C112.706 161.393 115.9 163.796 119.434 165.601C122.792 167.326 126.404 168.504 130.134 169.09C135.552 169.967 141.095 169.687 146.397 168.267C144.53 169.092 142.575 169.702 140.57 170.086C131.577 171.698 122.31 169.744 114.734 164.638V164.646Z" fill="#E8F1F8" />
+                  <path d="M1.26407 134.563C1.74877 129.268 2.94475 124.064 4.81974 119.089C5.77376 116.541 6.9098 114.066 8.21902 111.681C9.57711 109.25 11.118 106.925 12.8282 104.726C14.575 102.49 16.5019 100.401 18.5897 98.4793C20.6138 96.6475 22.7587 94.9536 25.0097 93.4092C27.1496 91.9606 29.3061 90.6684 31.4296 89.4996C33.5531 88.3308 35.6355 87.3185 37.6849 86.3719C41.8002 84.4871 45.6604 82.9233 49.2655 81.4335C53.3808 79.7216 57.241 78.1413 60.3934 76.4046C63.0649 75.0616 65.5157 73.3185 67.661 71.2357C68.4675 70.4212 69.1722 69.5119 69.7599 68.5278C70.3824 67.4619 70.8979 66.3371 71.299 65.1697C71.8337 63.5798 72.268 61.9579 72.5995 60.3136C72.9945 58.4534 73.3485 56.3711 73.7435 54.0665C74.1386 51.7619 74.5666 49.3092 75.118 46.6589C75.7246 43.781 76.5024 40.9418 77.4473 38.1566C79.5492 32.14 82.6887 26.5381 86.7233 21.6047C94.5783 11.9728 105.269 5.06095 117.276 1.85103C123.376 0.212768 129.716 -0.344361 136.009 0.204891C142.248 0.791086 148.34 2.44774 154.017 5.10216C165.114 10.2862 174.301 18.8257 180.282 29.5144C183.32 34.9431 185.381 40.863 186.372 47.0046C187.321 53.0948 187.221 59.3025 186.076 65.359C186.076 65.4907 186.018 65.6142 185.994 65.7458C186.257 66.2726 186.512 66.8076 186.734 67.392C187.365 68.9306 187.866 70.5191 188.232 72.1411C188.43 73.1946 188.619 74.2564 188.776 75.3264L188.907 76.9231L189.014 78.4376C189.014 79.4417 189.014 80.4458 188.965 81.45C188.916 82.4541 188.784 83.4171 188.669 84.4048C188.118 88.1357 187.008 91.7622 185.376 95.1623C184.247 97.5176 182.885 99.7538 181.31 101.837C179.609 104.122 177.679 106.226 175.549 108.117C175.014 108.628 174.446 109.105 173.853 109.574C173.261 110.043 172.693 110.529 172.059 110.965C171.425 111.401 170.8 111.871 170.174 112.282L168.339 113.443C165.905 114.895 163.378 116.184 160.775 117.303C156.15 119.236 151.405 120.866 146.569 122.184C142.305 123.385 138.585 124.389 135.754 125.295C132.477 126.296 129.262 127.486 126.124 128.859C123.535 129.971 121.123 131.454 118.963 133.262C118.071 134.064 117.263 134.955 116.551 135.921C115.76 137.05 115.071 138.248 114.494 139.501C113.832 140.989 113.249 142.511 112.749 144.061C112.214 145.707 111.728 147.452 111.251 149.296L110.428 152.275C110.131 153.32 109.868 154.333 109.531 155.427C108.913 157.567 108.148 159.847 107.234 162.168L106.502 163.921C106.238 164.522 105.934 165.14 105.679 165.74C105.119 166.967 104.428 168.119 103.769 169.288C102.4 171.582 100.847 173.762 99.127 175.807C97.4343 177.823 95.5967 179.712 93.6289 181.461C91.6791 183.171 89.6138 184.744 87.4476 186.169C83.178 188.988 78.5567 191.235 73.7024 192.852C68.8653 194.491 63.8404 195.512 58.7473 195.889C53.5437 196.287 48.3103 195.975 43.1912 194.959C37.8738 193.899 32.7517 192.025 28.0056 189.404C23.1593 186.678 18.7937 183.174 15.0834 179.033C11.4832 174.952 8.51467 170.355 6.27659 165.395C4.10052 160.555 2.58347 155.444 1.76613 150.201C0.936152 145.031 0.767451 139.776 1.26407 134.563ZM119.918 60.8897L121.078 60.791L122.165 60.6757L124.305 60.437C125.605 60.2313 126.98 60.0667 128.099 59.8033C129.218 59.5399 130.28 59.2518 131.334 58.9802C132.179 58.6856 133.003 58.3365 133.803 57.9349C134.43 57.6496 135.028 57.3051 135.589 56.9061C134.214 56.6427 133.037 56.083 131.976 55.869C131.277 55.6822 130.568 55.5392 129.852 55.441C129.169 55.334 128.486 55.1859 127.63 55.0048C125.539 54.509 123.389 54.3068 121.243 54.4039C120.368 54.4498 119.5 54.5794 118.65 54.7908L118.848 56.9061C118.996 58.3465 119.119 59.688 119.243 60.9309L119.918 60.8897ZM48.1708 135.707C47.1666 135.962 46.1872 136.176 45.2242 136.357C45.3806 136.653 45.5617 136.933 45.7098 137.229L46.0967 137.764C46.2072 137.947 46.3399 138.116 46.4917 138.266C46.9633 138.873 47.5173 139.41 48.1379 139.863C48.2749 139.955 48.4068 140.054 48.5329 140.159C48.6908 140.234 48.8447 140.316 48.9939 140.406C49.1503 140.507 49.3191 140.587 49.496 140.645C49.6626 140.735 49.8359 140.812 50.0145 140.876C50.7997 141.152 51.6102 141.35 52.4343 141.468C53.2857 141.546 54.1426 141.546 54.994 141.468C56.3792 141.326 57.7023 140.821 58.8295 140.003C58.8902 139.969 58.9481 139.931 59.0024 139.888C59.0024 139.838 59.0847 139.797 59.1258 139.748C59.167 139.699 59.3069 139.624 59.4222 139.476C59.6797 139.193 59.9189 138.893 60.1382 138.579C60.4351 138.192 60.7099 137.788 60.9613 137.369C61.093 137.139 61.2247 136.842 61.3646 136.546L61.5704 136.151L61.7761 135.69L62.2041 134.744L62.6239 133.665C62.7638 133.32 62.912 132.925 63.0519 132.513L63.4881 131.287C64.0231 129.641 64.5664 128.044 65.1343 126.414C60.2526 130.749 54.4533 133.923 48.1708 135.698V135.707ZM75.2662 164.646C78.8121 162.264 81.7473 159.08 83.8344 155.353C84.0566 154.892 84.2871 154.44 84.5258 153.987L85.2006 152.415C85.4146 151.847 85.6369 151.312 85.8427 150.719C86.0484 150.127 86.2377 149.6 86.4352 148.991C86.3282 149.197 86.2377 149.394 86.1389 149.6C84.5088 152.831 82.4458 155.824 80.0071 158.497C77.294 161.393 74.0999 163.796 70.5665 165.601C67.2084 167.326 63.5963 168.504 59.8666 169.09C54.448 169.967 48.9051 169.687 43.6028 168.267C45.4702 169.092 47.4251 169.702 49.4301 170.086C58.423 171.698 67.6901 169.744 75.2662 164.638V164.646Z" fill="#E8F1F8" />
+                  <path d="M110.281 136.874C107.919 136.865 105.62 136.104 103.719 134.702L96.9688 129.764C96.1313 129.148 95.1184 128.815 94.0782 128.815C93.0381 128.815 92.0252 129.148 91.1876 129.764L84.4376 134.702C82.6921 135.977 80.6138 136.717 78.4554 136.833C76.2971 136.948 74.1516 136.435 72.2797 135.354C70.4078 134.273 68.8902 132.672 67.9113 130.745C66.9324 128.818 66.5345 126.648 66.7657 124.499L67.672 116.186C67.7883 115.153 67.5703 114.11 67.0501 113.21C66.5298 112.31 65.7346 111.601 64.7813 111.186L57.1407 107.811C55.1583 106.942 53.472 105.514 52.288 103.702C51.1039 101.89 50.4733 99.7726 50.4733 97.6081C50.4733 95.4435 51.1039 93.3258 52.288 91.5138C53.472 89.7019 55.1583 88.2741 57.1407 87.4049L64.7813 84.0299C65.7346 83.6153 66.5298 82.9059 67.0501 82.006C67.5703 81.106 67.7883 80.0629 67.672 79.0299L66.7657 70.7174C66.5345 68.5684 66.9324 66.3984 67.9113 64.4713C68.8902 62.5442 70.4078 60.943 72.2797 59.8622C74.1516 58.7815 76.2971 58.2677 78.4554 58.3835C80.6138 58.4993 82.6921 59.2395 84.4376 60.5143L91.1876 65.4518C92.0252 66.0686 93.0381 66.4013 94.0782 66.4013C95.1184 66.4013 96.1313 66.0686 96.9688 65.4518L103.719 60.5143C104.921 59.6246 106.293 58.9909 107.749 58.6523C109.206 58.3137 110.716 58.2773 112.188 58.5456C113.691 58.8183 115.123 59.3921 116.398 60.2326C117.674 61.073 118.766 62.1627 119.609 63.4362C119.843 63.7787 120.007 64.1644 120.09 64.5707C120.173 64.977 120.175 65.3958 120.095 65.8027C120.014 66.2096 119.854 66.5964 119.623 66.9407C119.391 67.285 119.094 67.5798 118.748 67.808C118.401 68.0361 118.013 68.193 117.605 68.2695C117.198 68.3461 116.779 68.3407 116.373 68.2538C115.968 68.1668 115.584 68 115.243 67.763C114.903 67.5261 114.613 67.2238 114.391 66.8737C114.014 66.307 113.526 65.8224 112.956 65.4492C112.387 65.076 111.748 64.8217 111.078 64.7018C110.433 64.5828 109.77 64.6006 109.132 64.7541C108.494 64.9075 107.896 65.1931 107.375 65.5924L100.625 70.5299C98.7147 71.9302 96.4078 72.6851 94.0392 72.6851C91.6706 72.6851 89.3636 71.9302 87.4532 70.5299L80.7188 65.5924C79.9535 65.0113 79.0339 64.6685 78.075 64.6069C77.116 64.5453 76.1601 64.7676 75.3267 65.2459C74.4933 65.7243 73.8193 66.4376 73.3888 67.2968C72.9584 68.1559 72.7906 69.1229 72.9063 70.0768L73.8126 78.3737C74.085 80.7214 73.6016 83.0947 72.4326 85.1488C71.2637 87.2029 69.4701 88.8307 67.3126 89.7956L59.6563 93.1706C58.7885 93.5557 58.0511 94.1845 57.5336 94.9804C57.016 95.7764 56.7405 96.7055 56.7405 97.6549C56.7405 98.6044 57.016 99.5335 57.5336 100.329C58.0511 101.125 58.7885 101.754 59.6563 102.139L67.3126 105.421C69.4819 106.372 71.2902 107.992 72.4736 110.044C73.657 112.096 74.1535 114.473 73.8907 116.827L72.9845 125.124C72.8687 126.078 73.0365 127.045 73.4669 127.904C73.8974 128.763 74.5714 129.476 75.4048 129.955C76.2382 130.433 77.1941 130.655 78.1531 130.594C79.1121 130.532 80.0316 130.189 80.797 129.608L87.5313 124.671C89.4417 123.27 91.7487 122.515 94.1173 122.515C96.4859 122.515 98.7928 123.27 100.703 124.671L107.453 129.608C108.219 130.189 109.138 130.532 110.097 130.594C111.056 130.655 112.012 130.433 112.845 129.955C113.679 129.476 114.353 128.763 114.783 127.904C115.214 127.045 115.382 126.078 115.266 125.124L114.359 116.827C114.087 114.483 114.569 112.114 115.735 110.062C116.901 108.011 118.691 106.385 120.844 105.421L128.5 102.046C129.368 101.66 130.105 101.032 130.623 100.236C131.14 99.4397 131.416 98.5106 131.416 97.5612C131.416 96.6117 131.14 95.6827 130.623 94.8867C130.105 94.0907 129.368 93.462 128.5 93.0768L124.344 91.3581C123.957 91.2006 123.606 90.9671 123.311 90.6715C123.016 90.3759 122.783 90.0241 122.626 89.637C122.469 89.2499 122.392 88.8352 122.398 88.4176C122.404 88 122.494 87.5878 122.662 87.2055C122.83 86.8232 123.073 86.4785 123.377 86.1917C123.681 85.9049 124.039 85.682 124.43 85.536C124.821 85.39 125.238 85.3239 125.655 85.3416C126.072 85.3594 126.482 85.4606 126.859 85.6393L131.016 87.4674C132.998 88.3366 134.684 89.7644 135.868 91.5763C137.053 93.3883 137.683 95.506 137.683 97.6706C137.683 99.8351 137.053 101.953 135.868 103.765C134.684 105.577 132.998 107.005 131.016 107.874L123.375 111.249C122.422 111.665 121.626 112.374 121.104 113.273C120.581 114.172 120.359 115.215 120.469 116.249L121.375 124.561C121.637 126.713 121.255 128.893 120.275 130.827C119.296 132.76 117.765 134.359 115.875 135.421C114.17 136.386 112.241 136.887 110.281 136.874Z" fill="#2C7FB9" />
+                  <path d="M94.4376 108.546C94.0252 108.546 93.6169 108.465 93.2361 108.306C92.8553 108.148 92.5096 107.916 92.2188 107.624L78.7657 94.1706C78.4304 93.8919 78.1571 93.5462 77.9634 93.1556C77.7697 92.765 77.6599 92.3382 77.641 91.9026C77.6221 91.467 77.6946 91.0323 77.8537 90.6264C78.0129 90.2205 78.2552 89.8524 78.5652 89.5457C78.8751 89.2391 79.2458 89.0007 79.6533 88.8459C80.0609 88.691 80.4964 88.6232 80.9317 88.6467C81.3671 88.6703 81.7927 88.7846 82.1812 88.9825C82.5697 89.1804 82.9125 89.4573 83.1876 89.7956L94.4376 101.046L134.188 61.2331C134.783 60.6955 135.562 60.4074 136.364 60.4286C137.166 60.4497 137.929 60.7785 138.495 61.3467C139.062 61.9149 139.388 62.6792 139.406 63.4812C139.424 64.2831 139.134 65.0615 138.594 65.6549L96.6407 107.608C96.3531 107.901 96.0105 108.135 95.6325 108.296C95.2545 108.457 94.8484 108.542 94.4376 108.546Z" fill="#2C7FB9" />
+                </g>
+                <defs>
+                  <clipPath id="clip0_202_52">
+                    <rect width="190" height="197" fill="white" />
+                  </clipPath>
+                </defs>
+              </svg>
+              <section id="success-texts">
+                <h1 id="success-header-text">Payment done!</h1>
+                <p id="success-subtext">You've successfully paid PayBox GHS <span class="amount-value">5,000</span> from your account.</p>
+              </section>
+              <button id="card-btn" type='button' onClick={() => this.closeModal()} class="desktop-btn">Close</button>
+            </section>
+
             <button type='button'
               class="bg-red-600 text-white p-2.5 rounded flex justify-center drop-shadow"
               onClick={() => this.closeModal()}>Close</button>
 
 
 
-            <br></br>
+            {/* <br></br>
             <div id='payment_options2' class='hidden'>
               <div class='container'>
                 <button onClick={() => this.changePaymentMethod("test")}>Test</button>
                 <button onClick={() => this.changePaymentMethod("momo")}>Mobile Money</button>
                 <button onClick={() => this.changePaymentMethod("card")}>Card</button>
               </div>
-            </div>
+            </div> */}
 
-            </div>
-          
+          </div>
+
         </div>
       </Host>
     );

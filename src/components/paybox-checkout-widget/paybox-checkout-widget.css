@@ -441,7 +441,7 @@ fieldset {
 }
 
 #success-page {
-  display: none;
+  /* display: none; */
   flex-direction: column;
   gap: 40px;
   max-width: 542px;
@@ -820,7 +820,7 @@ fieldset {
   }
 
   #success-page {
-      display: none;
+      /* display: flex; */
       flex-direction: column;
       gap: 40px;
       max-width: 542px;

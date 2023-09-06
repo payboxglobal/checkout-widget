@@ -19,10 +19,10 @@ export class PayboxCheckoutWidget {
   @State() isInDeveloperMode: boolean = false;
   @State() cashIsEnabled: boolean = false;
 
-  @State() email: string;
+  @Prop() email: string;
   @State() mode: string; // "Test", "Cash", "Mobile Money", "Card"
-  @State() payerName: string;
-  @State() payerPhone: string;
+  @Prop() payerName: string;
+  @Prop() payerPhone: string;
   @State() mobileNumber: string;
   @State() mobileNetwork: string;
 
@@ -89,6 +89,19 @@ export class PayboxCheckoutWidget {
   }
 
 
+  componentDidLoad() {
+    // Add custom font to page DOM since font-face doesn't work within Shadow DOM.
+    const fontCssUrl = 'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap';
+    let element = document.querySelector(`link[href="${fontCssUrl}"]`);
+
+    // Only inject the element if it's not yet present
+    if (!element) {
+      element = document.createElement('link');
+      element.setAttribute('rel', 'stylesheet');
+      element.setAttribute('href', fontCssUrl);
+      document.head.appendChild(element);
+    }
+  }
 
 
   payRequest(e) {
@@ -100,10 +113,10 @@ export class PayboxCheckoutWidget {
     // form.append("mode", mode);
     // console.log(e.currentTarget);
     formData.append("mode", "Test");//this.mode);
-    console.log(this.payerName);
+    /*console.log(this.payerName);
     console.log(this.payerPhone);
     console.log(this.email);
-    console.log(this.mode);
+    console.log(this.mode);*/
     formData.append("payerName", this.payerName);
     formData.append("payerPhone", this.payerPhone);
     formData.append("payerEmail", this.email);
@@ -143,7 +156,7 @@ export class PayboxCheckoutWidget {
         console.log(result);
         if(result.status === "Success") {
           this.el.shadowRoot.getElementById('payment_options').className = 'hidden';
-          this.el.shadowRoot.getElementById('confirm_details').className = 'hidden';
+          // this.el.shadowRoot.getElementById('confirm_details').className = 'hidden';
           this.el.shadowRoot.getElementById('success-page').className = 'flex-display';
         }
       })
@@ -251,10 +264,17 @@ export class PayboxCheckoutWidget {
       .then(response => response.json())
       .then(result => {
         // console.log(result);
-        if (result.type === "Developer") {
+        if(result.mode === "Development") {
           this.isInDeveloperMode = true;
         } else {
           this.isInDeveloperMode = false;
+        }
+
+        // accept cash: 0 = false, accept cash: 1 = true
+        if(result.accept_cash === 1) {
+          this.cashIsEnabled  = true;
+        } else {
+          this.cashIsEnabled = false;
         }
       })
       .catch(error => console.log('error', error));
@@ -295,10 +315,9 @@ export class PayboxCheckoutWidget {
 
 
 
-            {/* {this.isInDeveloperMode ? <p>Developer Mode is enabled</p> : null} */}
 
             <form id="theForm" method='POST' onSubmit={(e) => this.payRequest(e)}>
-              <div id='confirm_details'>
+              {/* <div id='confirm_details'>
                 <p>Amount: GHS {this.amount}</p>
                 <span id="payer_name_error" class='hidden'>Please fill in this field</span>
                 <br></br>
@@ -313,13 +332,13 @@ export class PayboxCheckoutWidget {
                 <input name="payer_email" id="payer_email" placeholder='email*' required></input>
                 <br></br>
                 <button type='button' class="bg-indigo-500 text-white p-2.5 rounded flex justify-center drop-shadow" onClick={(e) => this.showPaymentMethods(e)}>Confirm Details</button>
-              </div>
+              </div> */}
 
               {/* Reserved section start */}
 
               {/* Reserved section end */}
 
-              <div id='payment_options' class='hidden'>
+              <div id='payment_options'>
                 {/* <a href='#' onClick={() => this.hidePaymentMethods()}>Back</a>
               <div class='test_div hidden' id='test_div'>
                 <p>Test</p>
@@ -359,7 +378,7 @@ export class PayboxCheckoutWidget {
                       <img src="../../assets/svg/recipient-account-logo.svg" alt="recipient logo" loading="eager" />
                     </figure>
                     <section id="header-texts">
-                      <p id="pay-text">Pay <strong id="amount"><span class="amount-value">5,000</span></strong></p>
+                      <p id="pay-text">Pay <strong id="amount">GHS <span class="amount-value">5,000</span></strong></p>
                       <p id="sender-email">{this.email}</p>
                     </section>
                     {/* <!--This is the button that the user can click to close the modal--> */}
@@ -397,7 +416,7 @@ export class PayboxCheckoutWidget {
                               <span class="nav-text">Mobile money</span>
                             </a>
                           </li>
-                          <li class="nav-item">
+                          <li class={`${this.cashIsEnabled ? "nav-item" : "hidden"}`}>
                             <a ref={el => (this.cashPaymentNavItem = el as HTMLAnchorElement)} onClick={() => this.placeCashPaymentContent()} id="cash-payment-nav-item" class="nav-tab" href="#">
                               <svg class="navitem-icon" xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
                                 <path d="M17.2441 20.5099H7.24414C4.24414 20.5099 2.24414 19.0099 2.24414 15.5099V8.50989C2.24414 5.00989 4.24414 3.50989 7.24414 3.50989H17.2441C20.2441 3.50989 22.2441 5.00989 22.2441 8.50989V15.5099C22.2441 19.0099 20.2441 20.5099 17.2441 20.5099Z" stroke="#091925" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
@@ -506,15 +525,15 @@ export class PayboxCheckoutWidget {
                         </section>
                       </section>
                       {/* <!--This is the container that shows the content of the cash payment method when selected--> */}
-                      <section ref={el => (this.cashPaymentDesktopContent = el as HTMLElement)} id="cash-payment-content" class="payment-content">
-                        <section class="first-part">
-                          <section class="content-top-texts">
+                      <section ref={el => (this.cashPaymentDesktopContent = el as HTMLElement)} id="cash-payment-content" class={`${this.cashIsEnabled ? "payment-content" : "hidden"}`}>
+                        <section class={`${this.cashIsEnabled ? "first-part" : "hidden"}`}>
+                          <section class={`${this.cashIsEnabled ? "content-top-texts" : "hidden"}`}>
                             <h2 class="content-title">Cash payment</h2>
                             <p class="content-text">Click button below to make your payment with card</p>
                           </section>
                           <button id="card-btn" class="desktop-btn">Pay GHS <span class="amount-value">5,000</span></button>
                         </section>
-                        <section class="secured-container">
+                        <section class={`${this.cashIsEnabled ? "secured-container" : "hidden"}`}>
                           <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
                             <path d="M18.5 7.00989C18.5 3.76989 15.741 1.00989 12.5 1.00989C9.257 1.00989 6.5 3.76989 6.5 7.00989V9.73289C5.21101 11.1885 4.49957 13.0656 4.5 15.0099C4.5 19.4259 8.084 23.0099 12.501 23.0099C16.918 23.0099 20.5 19.4259 20.5 15.0099C20.5006 13.0653 19.7891 11.1878 18.5 9.73189V7.00989ZM8.5 7.00989C8.5 4.87889 10.369 3.00989 12.5 3.00989C14.631 3.00989 16.5 4.87889 16.5 7.00989V8.08889C15.2853 7.38236 13.9051 7.01025 12.4999 7.01042C11.0946 7.0106 9.71453 7.38306 8.5 8.08989V7.00989ZM11 19.4239L7.293 15.7169L8.707 14.3029L11 16.5959L16.293 11.3029L17.707 12.7169L11 19.4239Z" fill="#2C7CB9" />
                           </svg>
@@ -648,9 +667,9 @@ export class PayboxCheckoutWidget {
               <button id="card-btn" type='button' onClick={() => this.closeModal()} class="desktop-btn">Close</button>
             </section>
 
-            <button type='button'
+            {/* <button type='button'
               class="bg-red-600 text-white p-2.5 rounded flex justify-center drop-shadow"
-              onClick={() => this.closeModal()}>Close</button>
+              onClick={() => this.closeModal()}>Close</button> */}
 
 
 

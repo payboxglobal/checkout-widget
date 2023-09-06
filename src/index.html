@@ -3,13 +3,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
-    <title>Stencil Component Starter</title>
-
     <script type="module" src="/build/checkout-widget.esm.js"></script>
     <script nomodule src="/build/checkout-widget.js"></script>
   </head>
   <body>
     <!-- <my-component first="Stencil" last="'Don't call me a framework' JS"></my-component> -->
-    <paybox-checkout-widget amount="100" merchant_key="[merchant_key]" currency="GHS"></paybox-checkout-widget>
+    <paybox-checkout-widget amount="100" merchant_key="[merchant_key]" currency="GHS" payerName="John Doe" payerPhone="+233548987346" email="joshgames@gmail.com"></paybox-checkout-widget>
   </body>
 </html>

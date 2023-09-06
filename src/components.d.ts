@@ -25,7 +25,10 @@ export namespace Components {
         "btntext": string;
         "colour": string;
         "curreny": string;
+        "email": string;
         "merchant_key": string;
+        "payerName": string;
+        "payerPhone": string;
         "phone_number": string;
     }
 }
@@ -71,8 +74,11 @@ declare namespace LocalJSX {
         "btntext"?: string;
         "colour"?: string;
         "curreny"?: string;
+        "email"?: string;
         "merchant_key"?: string;
         "onDidReset"?: (event: PayboxCheckoutWidgetCustomEvent<any>) => void;
+        "payerName"?: string;
+        "payerPhone"?: string;
         "phone_number"?: string;
     }
     interface IntrinsicElements {

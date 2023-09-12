@@ -115,59 +115,83 @@ export const removeInfoBanner = e => {
 
 
 // mobile view variables and functions
-const initialMobilePage = document.getElementById('mobile-initial-page');
+/*const initialMobilePage = document.getElementById('mobile-initial-page');
 const cardPageMobile = document.getElementById('mobile-card-page');
 const mobileMoneyPageMobile = document.getElementById('mobile-mobilemoney-page');
 const cashPaymentPageMobile = document.getElementById('mobile-cash-payment-page');
 const testPageMobile = document.getElementById('mobile-test-page');
-const backBtnList = document.getElementsByClassName('back-btn-container');
+const backBtnList = document.getElementsByClassName('back-btn-container');*/
 
-export const goMobileCardPage = e => {
+export const goMobileCardPage = (
+    initialMobilePage,
+    mobileMoneyPageMobile,
+    cashPaymentPageMobile,
+    testPageMobile,
+    cardPageMobile
+  ) => {
     initialMobilePage.style.display = 'none';
     mobileMoneyPageMobile.style.display = 'none';
     cashPaymentPageMobile.style.display = 'none';
     testPageMobile.style.display = 'none';
     cardPageMobile.style.display = 'flex';
-}
-
-export const goMobileCashPaymentPage = e => {
+  };
+  
+  export const goMobileCashPaymentPage = (
+    initialMobilePage,
+    mobileMoneyPageMobile,
+    cardPageMobile,
+    testPageMobile,
+    cashPaymentPageMobile
+  ) => {
     initialMobilePage.style.display = 'none';
     mobileMoneyPageMobile.style.display = 'none';
     cardPageMobile.style.display = 'none';
     testPageMobile.style.display = 'none';
     cashPaymentPageMobile.style.display = 'flex';
-}
-
-export const goMobileMobilemoneyPage = e => {
+  };
+  
+  export const goMobileMobilemoneyPage = (
+    initialMobilePage,
+    cardPageMobile,
+    cashPaymentPageMobile,
+    testPageMobile,
+    mobileMoneyPageMobile
+  ) => {
     initialMobilePage.style.display = 'none';
     cardPageMobile.style.display = 'none';
     cashPaymentPageMobile.style.display = 'none';
     testPageMobile.style.display = 'none';
     mobileMoneyPageMobile.style.display = 'flex';
-}
-
-export const goMobileTestPage = e => {
+  };
+  
+  export const goMobileTestPage = (
+    initialMobilePage,
+    mobileMoneyPageMobile,
+    cashPaymentPageMobile,
+    cardPageMobile,
+    testPageMobile
+  ) => {
     initialMobilePage.style.display = 'none';
     mobileMoneyPageMobile.style.display = 'none';
     cashPaymentPageMobile.style.display = 'none';
     cardPageMobile.style.display = 'none';
     testPageMobile.style.display = 'flex';
-}
-
-export const backToInitialPage = e => {
+  };
+  
+  export const backToInitialPage = (initialMobilePage, mobileMoneyPageMobile, cashPaymentPageMobile, cardPageMobile, testPageMobile, backBtnList) => {
     for (let i = 0; i < backBtnList.length; i++) {
-        initialMobilePage.style.display = 'flex';
-        mobileMoneyPageMobile.style.display = 'none';
-        cashPaymentPageMobile.style.display = 'none';
-        cardPageMobile.style.display = 'none';
-        testPageMobile.style.display = 'none';
+      initialMobilePage.style.display = 'flex';
+      mobileMoneyPageMobile.style.display = 'none';
+      cashPaymentPageMobile.style.display = 'none';
+      cardPageMobile.style.display = 'none';
+      testPageMobile.style.display = 'none';
     }
-}
-
+  };
+  
 // remove banner variable & function
-const banners = document.getElementsByClassName('banner');
+//const banners = document.getElementsByClassName('banner');
 
-export const removeBanner = e => {
+export const removeBanner = (banners) => {
 
     for (let i = 0; i < banners.length; i++) {
         console.log(banners[i]);

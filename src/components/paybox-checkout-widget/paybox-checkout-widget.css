@@ -39,14 +39,15 @@
   width: 100%;
   overflow: auto;
   height: 100%;
-  background-color: hsla(150, 8%, 95%, 1);
+  /* background-color: hsla(150, 8%, 95%, 1); */
+  background-color: hsla(0, 0%, 100%, 1);
   justify-content: center;
   align-items: center;
 }
 
 .modal-content {
   /* background-color: hsla(150, 8%, 95%, 1); */
-  padding: 20px;
+  /* padding: 20px; */
   border-radius: 5px;
   width: 100%;
   height: 100%;
@@ -131,9 +132,8 @@ main {
 
 #mobile-top-content #title {
   color: var(--primary-color);
-  text-transform: uppercase;
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: 0.975rem;
+  font-weight: bold;
 }
 
 #mobile-top-content #subtext {
@@ -414,12 +414,28 @@ fieldset {
   padding: 4px;
 }
 
+#mobile-number-m {
+  font-size: 1rem;
+  font-weight: 400;
+  border: none;
+  padding: 4px;
+}
+
 #mobile-number:focus {
   border: none;
   outline: none;
 }
 
+#mobile-number-m:focus {
+  border: none;
+  outline: none;
+}
+
 #mobile-number-container:has(#mobile-number:focus) {
+  border: 2.4px solid var(--primary-color);
+}
+
+#mobile-number-container:has(#mobile-number-m:focus) {
   border: 2.4px solid var(--primary-color);
 }
 
@@ -442,6 +458,15 @@ fieldset {
 }
 
 #success-page {
+  /* display: none; */
+  flex-direction: column;
+  gap: 40px;
+  max-width: 542px;
+  padding: 32px;
+  align-items: center;
+}
+
+#success-page-mobile {
   /* display: none; */
   flex-direction: column;
   gap: 40px;
@@ -476,6 +501,10 @@ fieldset {
 }
 
 #success-page button {
+  align-self: stretch;
+}
+
+#success-page-mobile button {
   align-self: stretch;
 }
 
@@ -560,6 +589,19 @@ fieldset {
       display: flex;
       justify-content: center;
       background: var(--body-background-color);
+  }
+
+  .modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    overflow: auto;
+    height: 100%;
+    background-color: hsla(150, 8%, 95%, 1);
+    /* background-color: hsla(0, 0%, 100%, 1); */
+    justify-content: center;
+    align-items: center;
   }
 
   header {
@@ -786,19 +828,19 @@ fieldset {
       font-weight: 400;
   }
 
-  #mobile-number {
+  #mobile-number-m {
       font-size: 1rem;
       font-weight: 400;
       border: none;
       padding: 4px;
   }
 
-  #mobile-number:focus {
+  #mobile-number-m:focus {
       border: none;
       outline: none;
   }
 
-  #mobile-number-container:has(#mobile-number:focus) {
+  #mobile-number-container:has(#mobile-number-m:focus) {
       border: 2.4px solid var(--primary-color);
   }
 
@@ -833,6 +875,19 @@ fieldset {
       align-items: center;
   }
 
+  #success-page-mobile {
+    /* display: flex; */
+    flex-direction: column;
+    gap: 40px;
+    max-width: 542px;
+    padding: 32px;
+    background: var(--card-background-color);
+    border-radius: 4px;
+    border: .11px solid var(--border-color);
+    margin: 0 auto;
+    align-items: center;
+}
+
   #success-illustration {
       max-width: 100%;
   }
@@ -861,6 +916,10 @@ fieldset {
   #success-page button {
       align-self: stretch;
   }
+
+  #success-page-mobile button {
+    align-self: stretch;
+}
 
   .banner {
       display: none; /* to display the banners, the value of display here will be turned to flex for the particular banner using it's id */

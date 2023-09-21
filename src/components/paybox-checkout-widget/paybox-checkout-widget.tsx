@@ -94,39 +94,6 @@ export class PayboxCheckoutWidget {
     return fieldset; // Return the newly created HTML element
   }
 
-  // Example usage:
-  mtnInputElement = this.createNetworkElement(
-    'mtn',
-    'network',
-    'MTN',
-    'mtn-network',
-    '../../assets/svg/mtn.svg',
-    'mtn mobile money logo',
-    'MTN Mobile Money'
-  );
-
-  // Create the first network element
-  airtelInputElement = this.createNetworkElement(
-    'airtel',
-    'network',
-    'AIRTELTIGO',
-    'airtel-network',
-    '../../assets/svg/airtel.svg',
-    'airteltigo mobile money logo',
-    'AIRTELTIGO Mobile Money'
-  );
-
-  // Create the second network element
-  vodafoneInputElement = this.createNetworkElement(
-    'vodafone',
-    'network',
-    'VODAFONE',
-    'vodafone-network',
-    '../../assets/svg/vodafone.svg',
-    'vodafone mobile money logo',
-    'VODAFONE Mobile Money'
-  );
-
   inMobileView() {
     this.inDesktopMode = false;
   }
@@ -171,8 +138,11 @@ export class PayboxCheckoutWidget {
   }
 
   removeBanner() {
-    let banners = this.el.shadowRoot.querySelectorAll(".banners");
-    widgetScript.removeBanners(banners);
+    let banners = this.el.shadowRoot.querySelectorAll(".banner");
+    for(let i = 0; i < banners.length; i++) {
+      $(banners[i]).css("display", "none");
+    }
+    //widgetScript.removeBanner(banners);
   }
 
 
@@ -240,6 +210,39 @@ export class PayboxCheckoutWidget {
       element.setAttribute('href', fontCssUrl);
       document.head.appendChild(element);
     }
+
+    const jQueryLink = 'https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js';
+    let jqueryElement = document.querySelector(`script[href="${jQueryLink}"]`);
+    
+    if(!jqueryElement) {
+      jqueryElement = document.createElement('script');
+      jqueryElement.setAttribute('src', jQueryLink);
+      document.head.appendChild(jqueryElement);
+    }
+    
+    const jQueryJSLink = 'https://code.jquery.com/jquery-latest.min.js';
+    let jqueryJSElement = document.querySelector(`script[href="${jQueryJSLink}"]`);
+
+    if(!jqueryJSElement) {
+      jqueryJSElement = document.createElement('script');
+      jqueryJSElement.setAttribute('src', jQueryJSLink);
+      document.body.appendChild(jqueryJSElement);
+    }
+
+    const linkToTelPlugin = 'https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/utils.js';
+    let jqueryTelPlugin = document.querySelector(`script[href="${linkToTelPlugin}]"`);
+
+    if(!jqueryTelPlugin) {
+      jqueryTelPlugin = document.createElement('script');
+      jqueryTelPlugin.setAttribute('src', linkToTelPlugin);
+      document.body.appendChild(jqueryTelPlugin);
+    }    
+  }
+  
+  foo() {
+    let fooInput = this.el.shadowRoot.getElementById('foo');
+    var $foo = $(fooInput);
+    console.log($foo.val());
   }
 
 
@@ -263,13 +266,15 @@ export class PayboxCheckoutWidget {
 
     if (this.mode === "Mobile Money") {
       var mobile_number = null;
+      var selectedRadioButton = null;
       if (this.inDesktopMode) {
         mobile_number = this.el.shadowRoot.querySelector<HTMLInputElement>("#mobile-number")?.value;
+        selectedRadioButton = e.target.querySelector('input[name="network"]:checked') as HTMLInputElement;
       } else {
         mobile_number = this.el.shadowRoot.querySelector<HTMLInputElement>("#mobile-number-m")?.value;
+        selectedRadioButton = e.target.querySelector('input[name="network-mobile"]:checked') as HTMLInputElement;
       }
 
-      const selectedRadioButton = e.target.querySelector('input[name="network"]:checked') as HTMLInputElement;
       const mobile_network = selectedRadioButton.value;
       if (mobile_network === undefined || mobile_network === "" || mobile_network === null) {
         // Todo: Give custom error to select mobile network
@@ -288,7 +293,15 @@ export class PayboxCheckoutWidget {
     }
 
     formData.append("amount", this.amount.toString());
-    formData.append("currency", "GHC");
+    formData.append("currency", this.currency);
+
+    let foo = true;
+    if(foo) {
+      var pending_banner = $(this.el.shadowRoot.getElementById("pending-container-mobile"));
+      pending_banner.css('display', 'flex');
+      // $(this.el.shadowRoot.getElementById('pending-container-mobile')).removeClass('hidden');
+      return;
+    }
 
     fetch("https://paybox.com.co/pay", {
       method: "POST",
@@ -302,10 +315,21 @@ export class PayboxCheckoutWidget {
         if (result.status === "Success") {
           this.el.shadowRoot.getElementById('payment_options').className = 'hidden';
           // this.el.shadowRoot.getElementById('confirm_details').className = 'hidden';
-          if (this.inDesktopMode)
+          if (this.inDesktopMode) {
             this.el.shadowRoot.getElementById('success-page').className = 'flex-display';
-          else
+          } else {
             this.el.shadowRoot.getElementById('success-page-mobile').className = 'flex-display';
+          }
+        } else if(result.status === "Pending") {
+          // this.el.shadowRoot.getElementById('payment_options').className = 'hidden';
+
+          if(this.inDesktopMode) {
+            var pending_banner = $(this.el.shadowRoot.getElementById("pending-container"));
+            pending_banner.css('display', 'flex');
+          } else {
+
+          }
+          
         }
       })
       // .then(result => window.location.href = "https://paybox.com.co/payment_success?token=" + result.token
@@ -447,16 +471,42 @@ export class PayboxCheckoutWidget {
       .then(response => response.json())
       .then(activeNetworks => {
         // console.log(activeNetworks);
+        // <input class="network" type="radio" id="mtn-select" name="network" value="MTN" />
+        // <label class="network-container" id="mtn-network" htmlFor="mtn-select">
+        // <figure class="network-img-container">
+        //   <img class="network-img" src="../../assets/svg/mtn.svg" loading="eager" alt="mtn mobile money logo" />
+        // </figure>
+        // <small class="network-text">MTN Mobile Money</small>
+        // </label>
         const networkFieldsParents = this.el.shadowRoot.getElementById('networks');
-
+        const networkFieldsParentsMobile = this.el.shadowRoot.getElementById('networks-mobile');
+        // createNetworkElement(inputId, inputName, inputValue, labelId, imgSrc, imgAlt, labelText)
         for (let i = 0; i < activeNetworks.length; i++) {
           let currentNetwork = activeNetworks[i];
           if (currentNetwork.mobile_network_name === "MTN") {
-            networkFieldsParents.appendChild(this.mtnInputElement);
+            networkFieldsParents.appendChild(this.createNetworkElement(
+              currentNetwork.mobile_network_name, 'network', currentNetwork.mobile_network, 
+              'mtn-network', '../../assets/svg/mtn.svg', 'mtn mobile money logo', 'MTN Mobile Money'));
+
+              networkFieldsParentsMobile.appendChild(this.createNetworkElement(
+                currentNetwork.mobile_network_name + '-SELECT', 'network-mobile', currentNetwork.mobile_network, 
+                'mtn-network', '../../assets/svg/mtn.svg', 'mtn mobile money logo', 'MTN Mobile Money'));
           } else if (currentNetwork.mobile_network_name === "VODAFONE") {
-            networkFieldsParents.appendChild(this.airtelInputElement);
+            networkFieldsParents.appendChild(this.createNetworkElement(
+              currentNetwork.mobile_network_name, 'network', currentNetwork.mobile_network, 
+              'vodafone-network', '../../assets/svg/vodafone.svg', 'vodafone cash logo', 'VODAFONE Cash'));
+
+              networkFieldsParentsMobile.appendChild(this.createNetworkElement(
+                currentNetwork.mobile_network_name + '-SELECT', 'network-mobile', currentNetwork.mobile_network, 
+                'vodafone-network', '../../assets/svg/vodafone.svg', 'vodafone cash logo', 'VODAFONE Cash'));
           } else if (currentNetwork.mobile_network_name === "AT") {
-            networkFieldsParents.appendChild(this.vodafoneInputElement);
+            networkFieldsParents.appendChild(this.createNetworkElement(
+              currentNetwork.mobile_network_name, 'network', currentNetwork.mobile_network, 
+              'airtel-network', '../../assets/svg/airtel.svg', 'airteltigo money logo', 'AIRTELTIGO Money'));
+
+              networkFieldsParentsMobile.appendChild(this.createNetworkElement(
+                currentNetwork.mobile_network_name + '-SELECT', 'network-mobile', currentNetwork.mobile_network, 
+                'airtel-network', '../../assets/svg/airtel.svg', 'airteltigo money logo', 'AIRTELTIGO Money'));
           }
         }
       })
@@ -665,7 +715,7 @@ export class PayboxCheckoutWidget {
                       </svg>
                       <p class="banner-test">Alert test</p>
                     </section>
-                    <section onClick={() => widgetScript.removeBanner()} class="banner-close">
+                    <section onClick={() => this.removeBanner()} class="banner-close">
                       <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8" fill="none">
                         <path d="M4.70449 3.99915L7.85221 0.856425C7.94629 0.762342 7.99915 0.634737 7.99915 0.501682C7.99915 0.368628 7.94629 0.241023 7.85221 0.146939C7.75812 0.0528557 7.63052 0 7.49747 0C7.36441 0 7.23681 0.0528557 7.14272 0.146939L4 3.29466L0.857278 0.146939C0.763194 0.0528557 0.635589 1.18132e-07 0.502535 1.19123e-07C0.369481 1.20114e-07 0.241876 0.0528557 0.147792 0.146939C0.0537084 0.241023 0.000852802 0.368628 0.000852801 0.501682C0.0008528 0.634737 0.0537084 0.762342 0.147792 0.856425L3.29551 3.99915L0.147792 7.14187C0.100962 7.18832 0.0637917 7.24358 0.0384257 7.30446C0.0130598 7.36535 0 7.43065 0 7.49661C0 7.56257 0.0130598 7.62788 0.0384257 7.68876C0.0637917 7.74965 0.100962 7.80491 0.147792 7.85135C0.19424 7.89818 0.2495 7.93536 0.310386 7.96072C0.371271 7.98609 0.436577 7.99915 0.502535 7.99915C0.568493 7.99915 0.633799 7.98609 0.694684 7.96072C0.75557 7.93536 0.81083 7.89818 0.857278 7.85135L4 4.70364L7.14272 7.85135C7.18917 7.89818 7.24443 7.93536 7.30532 7.96072C7.3662 7.98609 7.43151 7.99915 7.49747 7.99915C7.56342 7.99915 7.62873 7.98609 7.68961 7.96072C7.7505 7.93536 7.80576 7.89818 7.85221 7.85135C7.89904 7.80491 7.93621 7.74965 7.96157 7.68876C7.98694 7.62788 8 7.56257 8 7.49661C8 7.43065 7.98694 7.36535 7.96157 7.30446C7.93621 7.24358 7.89904 7.18832 7.85221 7.14187L4.70449 3.99915Z" fill="#091925" />
                       </svg>
@@ -680,7 +730,7 @@ export class PayboxCheckoutWidget {
                       </svg>
                       <p id="banner-test">Success test</p>
                     </section>
-                    <section onClick={() => widgetScript.removeBanner()} class="banner-close">
+                    <section onClick={() => this.removeBanner()} class="banner-close">
                       <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8" fill="none">
                         <path d="M4.70449 3.99915L7.85221 0.856425C7.94629 0.762342 7.99915 0.634737 7.99915 0.501682C7.99915 0.368628 7.94629 0.241023 7.85221 0.146939C7.75812 0.0528557 7.63052 0 7.49747 0C7.36441 0 7.23681 0.0528557 7.14272 0.146939L4 3.29466L0.857278 0.146939C0.763194 0.0528557 0.635589 1.18132e-07 0.502535 1.19123e-07C0.369481 1.20114e-07 0.241876 0.0528557 0.147792 0.146939C0.0537084 0.241023 0.000852802 0.368628 0.000852801 0.501682C0.0008528 0.634737 0.0537084 0.762342 0.147792 0.856425L3.29551 3.99915L0.147792 7.14187C0.100962 7.18832 0.0637917 7.24358 0.0384257 7.30446C0.0130598 7.36535 0 7.43065 0 7.49661C0 7.56257 0.0130598 7.62788 0.0384257 7.68876C0.0637917 7.74965 0.100962 7.80491 0.147792 7.85135C0.19424 7.89818 0.2495 7.93536 0.310386 7.96072C0.371271 7.98609 0.436577 7.99915 0.502535 7.99915C0.568493 7.99915 0.633799 7.98609 0.694684 7.96072C0.75557 7.93536 0.81083 7.89818 0.857278 7.85135L4 4.70364L7.14272 7.85135C7.18917 7.89818 7.24443 7.93536 7.30532 7.96072C7.3662 7.98609 7.43151 7.99915 7.49747 7.99915C7.56342 7.99915 7.62873 7.98609 7.68961 7.96072C7.7505 7.93536 7.80576 7.89818 7.85221 7.85135C7.89904 7.80491 7.93621 7.74965 7.96157 7.68876C7.98694 7.62788 8 7.56257 8 7.49661C8 7.43065 7.98694 7.36535 7.96157 7.30446C7.93621 7.24358 7.89904 7.18832 7.85221 7.14187L4.70449 3.99915Z" fill="#091925" />
                       </svg>
@@ -692,9 +742,9 @@ export class PayboxCheckoutWidget {
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                         <path d="M10.16 1.33269H5.84C3.33333 1.33269 3.14 3.58603 4.49333 4.81269L11.5067 11.186C12.86 12.4127 12.6667 14.666 10.16 14.666H5.84C3.33333 14.666 3.14 12.4127 4.49333 11.186L11.5067 4.81269C12.86 3.58603 12.6667 1.33269 10.16 1.33269Z" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                       </svg>
-                      <p id="banner-test">Pending test</p>
+                      <p id="banner-test">Payment Pending</p>
                     </section>
-                    <section onClick={() => widgetScript.removeBanner()} class="banner-close">
+                    <section onClick={() => this.removeBanner()} class="banner-close">
                       <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8" fill="none">
                         <path d="M4.70449 3.99915L7.85221 0.856425C7.94629 0.762342 7.99915 0.634737 7.99915 0.501682C7.99915 0.368628 7.94629 0.241023 7.85221 0.146939C7.75812 0.0528557 7.63052 0 7.49747 0C7.36441 0 7.23681 0.0528557 7.14272 0.146939L4 3.29466L0.857278 0.146939C0.763194 0.0528557 0.635589 1.18132e-07 0.502535 1.19123e-07C0.369481 1.20114e-07 0.241876 0.0528557 0.147792 0.146939C0.0537084 0.241023 0.000852802 0.368628 0.000852801 0.501682C0.0008528 0.634737 0.0537084 0.762342 0.147792 0.856425L3.29551 3.99915L0.147792 7.14187C0.100962 7.18832 0.0637917 7.24358 0.0384257 7.30446C0.0130598 7.36535 0 7.43065 0 7.49661C0 7.56257 0.0130598 7.62788 0.0384257 7.68876C0.0637917 7.74965 0.100962 7.80491 0.147792 7.85135C0.19424 7.89818 0.2495 7.93536 0.310386 7.96072C0.371271 7.98609 0.436577 7.99915 0.502535 7.99915C0.568493 7.99915 0.633799 7.98609 0.694684 7.96072C0.75557 7.93536 0.81083 7.89818 0.857278 7.85135L4 4.70364L7.14272 7.85135C7.18917 7.89818 7.24443 7.93536 7.30532 7.96072C7.3662 7.98609 7.43151 7.99915 7.49747 7.99915C7.56342 7.99915 7.62873 7.98609 7.68961 7.96072C7.7505 7.93536 7.80576 7.89818 7.85221 7.85135C7.89904 7.80491 7.93621 7.74965 7.96157 7.68876C7.98694 7.62788 8 7.56257 8 7.49661C8 7.43065 7.98694 7.36535 7.96157 7.30446C7.93621 7.24358 7.89904 7.18832 7.85221 7.14187L4.70449 3.99915Z" fill="#091925" />
                       </svg>
@@ -710,7 +760,7 @@ export class PayboxCheckoutWidget {
                       </svg>
                       <p id="banner-test">Failed test</p>
                     </section>
-                    <section onClick={() => widgetScript.removeBanner()} class="banner-close">
+                    <section onClick={() => this.removeBanner()} class="banner-close">
                       <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8" fill="none">
                         <path d="M4.70449 3.99915L7.85221 0.856425C7.94629 0.762342 7.99915 0.634737 7.99915 0.501682C7.99915 0.368628 7.94629 0.241023 7.85221 0.146939C7.75812 0.0528557 7.63052 0 7.49747 0C7.36441 0 7.23681 0.0528557 7.14272 0.146939L4 3.29466L0.857278 0.146939C0.763194 0.0528557 0.635589 1.18132e-07 0.502535 1.19123e-07C0.369481 1.20114e-07 0.241876 0.0528557 0.147792 0.146939C0.0537084 0.241023 0.000852802 0.368628 0.000852801 0.501682C0.0008528 0.634737 0.0537084 0.762342 0.147792 0.856425L3.29551 3.99915L0.147792 7.14187C0.100962 7.18832 0.0637917 7.24358 0.0384257 7.30446C0.0130598 7.36535 0 7.43065 0 7.49661C0 7.56257 0.0130598 7.62788 0.0384257 7.68876C0.0637917 7.74965 0.100962 7.80491 0.147792 7.85135C0.19424 7.89818 0.2495 7.93536 0.310386 7.96072C0.371271 7.98609 0.436577 7.99915 0.502535 7.99915C0.568493 7.99915 0.633799 7.98609 0.694684 7.96072C0.75557 7.93536 0.81083 7.89818 0.857278 7.85135L4 4.70364L7.14272 7.85135C7.18917 7.89818 7.24443 7.93536 7.30532 7.96072C7.3662 7.98609 7.43151 7.99915 7.49747 7.99915C7.56342 7.99915 7.62873 7.98609 7.68961 7.96072C7.7505 7.93536 7.80576 7.89818 7.85221 7.85135C7.89904 7.80491 7.93621 7.74965 7.96157 7.68876C7.98694 7.62788 8 7.56257 8 7.49661C8 7.43065 7.98694 7.36535 7.96157 7.30446C7.93621 7.24358 7.89904 7.18832 7.85221 7.14187L4.70449 3.99915Z" fill="#091925" />
                       </svg>
@@ -726,7 +776,7 @@ export class PayboxCheckoutWidget {
                       </svg>
                       <p id="banner-test">Info test</p>
                     </section>
-                    <section onClick={() => widgetScript.removeBanner()} class="banner-close">
+                    <section onClick={() => this.removeBanner()} class="banner-close">
                       <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8" fill="none">
                         <path d="M4.70449 3.99915L7.85221 0.856425C7.94629 0.762342 7.99915 0.634737 7.99915 0.501682C7.99915 0.368628 7.94629 0.241023 7.85221 0.146939C7.75812 0.0528557 7.63052 0 7.49747 0C7.36441 0 7.23681 0.0528557 7.14272 0.146939L4 3.29466L0.857278 0.146939C0.763194 0.0528557 0.635589 1.18132e-07 0.502535 1.19123e-07C0.369481 1.20114e-07 0.241876 0.0528557 0.147792 0.146939C0.0537084 0.241023 0.000852802 0.368628 0.000852801 0.501682C0.0008528 0.634737 0.0537084 0.762342 0.147792 0.856425L3.29551 3.99915L0.147792 7.14187C0.100962 7.18832 0.0637917 7.24358 0.0384257 7.30446C0.0130598 7.36535 0 7.43065 0 7.49661C0 7.56257 0.0130598 7.62788 0.0384257 7.68876C0.0637917 7.74965 0.100962 7.80491 0.147792 7.85135C0.19424 7.89818 0.2495 7.93536 0.310386 7.96072C0.371271 7.98609 0.436577 7.99915 0.502535 7.99915C0.568493 7.99915 0.633799 7.98609 0.694684 7.96072C0.75557 7.93536 0.81083 7.89818 0.857278 7.85135L4 4.70364L7.14272 7.85135C7.18917 7.89818 7.24443 7.93536 7.30532 7.96072C7.3662 7.98609 7.43151 7.99915 7.49747 7.99915C7.56342 7.99915 7.62873 7.98609 7.68961 7.96072C7.7505 7.93536 7.80576 7.89818 7.85221 7.85135C7.89904 7.80491 7.93621 7.74965 7.96157 7.68876C7.98694 7.62788 8 7.56257 8 7.49661C8 7.43065 7.98694 7.36535 7.96157 7.30446C7.93621 7.24358 7.89904 7.18832 7.85221 7.14187L4.70449 3.99915Z" fill="#091925" />
                       </svg>
@@ -735,6 +785,32 @@ export class PayboxCheckoutWidget {
                 </section>
 
                 {/* End of desktop view */}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
                 {/* Start of Mobile View */}
 
@@ -918,7 +994,7 @@ export class PayboxCheckoutWidget {
                         </svg>
                       </section>
                     </section>
-                    <section class="banner" id="pending-container-mobile">
+                    {/* <section class="banner" id="pending-container-mobile">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                           <path d="M10.16 1.33269H5.84C3.33333 1.33269 3.14 3.58603 4.49333 4.81269L11.5067 11.186C12.86 12.4127 12.6667 14.666 10.16 14.666H5.84C3.33333 14.666 3.14 12.4127 4.49333 11.186L11.5067 4.81269C12.86 3.58603 12.6667 1.33269 10.16 1.33269Z" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -930,7 +1006,7 @@ export class PayboxCheckoutWidget {
                           <path d="M4.70449 3.99915L7.85221 0.856425C7.94629 0.762342 7.99915 0.634737 7.99915 0.501682C7.99915 0.368628 7.94629 0.241023 7.85221 0.146939C7.75812 0.0528557 7.63052 0 7.49747 0C7.36441 0 7.23681 0.0528557 7.14272 0.146939L4 3.29466L0.857278 0.146939C0.763194 0.0528557 0.635589 1.18132e-07 0.502535 1.19123e-07C0.369481 1.20114e-07 0.241876 0.0528557 0.147792 0.146939C0.0537084 0.241023 0.000852802 0.368628 0.000852801 0.501682C0.0008528 0.634737 0.0537084 0.762342 0.147792 0.856425L3.29551 3.99915L0.147792 7.14187C0.100962 7.18832 0.0637917 7.24358 0.0384257 7.30446C0.0130598 7.36535 0 7.43065 0 7.49661C0 7.56257 0.0130598 7.62788 0.0384257 7.68876C0.0637917 7.74965 0.100962 7.80491 0.147792 7.85135C0.19424 7.89818 0.2495 7.93536 0.310386 7.96072C0.371271 7.98609 0.436577 7.99915 0.502535 7.99915C0.568493 7.99915 0.633799 7.98609 0.694684 7.96072C0.75557 7.93536 0.81083 7.89818 0.857278 7.85135L4 4.70364L7.14272 7.85135C7.18917 7.89818 7.24443 7.93536 7.30532 7.96072C7.3662 7.98609 7.43151 7.99915 7.49747 7.99915C7.56342 7.99915 7.62873 7.98609 7.68961 7.96072C7.7505 7.93536 7.80576 7.89818 7.85221 7.85135C7.89904 7.80491 7.93621 7.74965 7.96157 7.68876C7.98694 7.62788 8 7.56257 8 7.49661C8 7.43065 7.98694 7.36535 7.96157 7.30446C7.93621 7.24358 7.89904 7.18832 7.85221 7.14187L4.70449 3.99915Z" fill="#091925" />
                         </svg>
                       </section>
-                    </section>
+                    </section> */}
                     <section class="banner" id="failed-container-mobile">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -997,8 +1073,8 @@ export class PayboxCheckoutWidget {
                             <fieldset id="inputs">
                               <fieldset id="networks-container">
                                 <label id="networks-label" htmlFor="networks">Which mobile network?</label>
-                                <fieldset id="networks">
-                                  <fieldset class="network-detail">
+                                <fieldset id="networks-mobile">
+                                  {/* <fieldset class="network-detail">
                                     <input class="network" type="radio" id="mtn-select" name="network" value="MTN" />
                                     <label class="network-container" id="mtn-network" htmlFor="mtn-select">
                                       <figure class="network-img-container">
@@ -1024,7 +1100,7 @@ export class PayboxCheckoutWidget {
                                       </figure>
                                       <small class="network-text">VODAFONE Mobile Money</small>
                                     </label>
-                                  </fieldset>
+                                  </fieldset> */}
                                 </fieldset>
                               </fieldset>
                               <fieldset id="main-mobile-container">
@@ -1077,7 +1153,7 @@ export class PayboxCheckoutWidget {
                         </svg>
                       </section>
                     </section>
-                    <section class="banner" id="pending-container-mobile">
+                    {/* <section class="banner" id="pending-container-mobile">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                           <path d="M10.16 1.33269H5.84C3.33333 1.33269 3.14 3.58603 4.49333 4.81269L11.5067 11.186C12.86 12.4127 12.6667 14.666 10.16 14.666H5.84C3.33333 14.666 3.14 12.4127 4.49333 11.186L11.5067 4.81269C12.86 3.58603 12.6667 1.33269 10.16 1.33269Z" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1089,7 +1165,7 @@ export class PayboxCheckoutWidget {
                           <path d="M4.70449 3.99915L7.85221 0.856425C7.94629 0.762342 7.99915 0.634737 7.99915 0.501682C7.99915 0.368628 7.94629 0.241023 7.85221 0.146939C7.75812 0.0528557 7.63052 0 7.49747 0C7.36441 0 7.23681 0.0528557 7.14272 0.146939L4 3.29466L0.857278 0.146939C0.763194 0.0528557 0.635589 1.18132e-07 0.502535 1.19123e-07C0.369481 1.20114e-07 0.241876 0.0528557 0.147792 0.146939C0.0537084 0.241023 0.000852802 0.368628 0.000852801 0.501682C0.0008528 0.634737 0.0537084 0.762342 0.147792 0.856425L3.29551 3.99915L0.147792 7.14187C0.100962 7.18832 0.0637917 7.24358 0.0384257 7.30446C0.0130598 7.36535 0 7.43065 0 7.49661C0 7.56257 0.0130598 7.62788 0.0384257 7.68876C0.0637917 7.74965 0.100962 7.80491 0.147792 7.85135C0.19424 7.89818 0.2495 7.93536 0.310386 7.96072C0.371271 7.98609 0.436577 7.99915 0.502535 7.99915C0.568493 7.99915 0.633799 7.98609 0.694684 7.96072C0.75557 7.93536 0.81083 7.89818 0.857278 7.85135L4 4.70364L7.14272 7.85135C7.18917 7.89818 7.24443 7.93536 7.30532 7.96072C7.3662 7.98609 7.43151 7.99915 7.49747 7.99915C7.56342 7.99915 7.62873 7.98609 7.68961 7.96072C7.7505 7.93536 7.80576 7.89818 7.85221 7.85135C7.89904 7.80491 7.93621 7.74965 7.96157 7.68876C7.98694 7.62788 8 7.56257 8 7.49661C8 7.43065 7.98694 7.36535 7.96157 7.30446C7.93621 7.24358 7.89904 7.18832 7.85221 7.14187L4.70449 3.99915Z" fill="#091925" />
                         </svg>
                       </section>
-                    </section>
+                    </section> */}
                     <section class="banner" id="failed-container-mobile">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -1186,7 +1262,7 @@ export class PayboxCheckoutWidget {
                         </svg>
                       </section>
                     </section>
-                    <section class="banner" id="pending-container-mobile">
+                    {/* <section class="banner" id="pending-container-mobile">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                           <path d="M10.16 1.33269H5.84C3.33333 1.33269 3.14 3.58603 4.49333 4.81269L11.5067 11.186C12.86 12.4127 12.6667 14.666 10.16 14.666H5.84C3.33333 14.666 3.14 12.4127 4.49333 11.186L11.5067 4.81269C12.86 3.58603 12.6667 1.33269 10.16 1.33269Z" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1198,7 +1274,7 @@ export class PayboxCheckoutWidget {
                           <path d="M4.70449 3.99915L7.85221 0.856425C7.94629 0.762342 7.99915 0.634737 7.99915 0.501682C7.99915 0.368628 7.94629 0.241023 7.85221 0.146939C7.75812 0.0528557 7.63052 0 7.49747 0C7.36441 0 7.23681 0.0528557 7.14272 0.146939L4 3.29466L0.857278 0.146939C0.763194 0.0528557 0.635589 1.18132e-07 0.502535 1.19123e-07C0.369481 1.20114e-07 0.241876 0.0528557 0.147792 0.146939C0.0537084 0.241023 0.000852802 0.368628 0.000852801 0.501682C0.0008528 0.634737 0.0537084 0.762342 0.147792 0.856425L3.29551 3.99915L0.147792 7.14187C0.100962 7.18832 0.0637917 7.24358 0.0384257 7.30446C0.0130598 7.36535 0 7.43065 0 7.49661C0 7.56257 0.0130598 7.62788 0.0384257 7.68876C0.0637917 7.74965 0.100962 7.80491 0.147792 7.85135C0.19424 7.89818 0.2495 7.93536 0.310386 7.96072C0.371271 7.98609 0.436577 7.99915 0.502535 7.99915C0.568493 7.99915 0.633799 7.98609 0.694684 7.96072C0.75557 7.93536 0.81083 7.89818 0.857278 7.85135L4 4.70364L7.14272 7.85135C7.18917 7.89818 7.24443 7.93536 7.30532 7.96072C7.3662 7.98609 7.43151 7.99915 7.49747 7.99915C7.56342 7.99915 7.62873 7.98609 7.68961 7.96072C7.7505 7.93536 7.80576 7.89818 7.85221 7.85135C7.89904 7.80491 7.93621 7.74965 7.96157 7.68876C7.98694 7.62788 8 7.56257 8 7.49661C8 7.43065 7.98694 7.36535 7.96157 7.30446C7.93621 7.24358 7.89904 7.18832 7.85221 7.14187L4.70449 3.99915Z" fill="#091925" />
                         </svg>
                       </section>
-                    </section>
+                    </section> */}
                     <section class="banner" id="failed-container-mobile">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -1300,7 +1376,7 @@ export class PayboxCheckoutWidget {
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                           <path d="M10.16 1.33269H5.84C3.33333 1.33269 3.14 3.58603 4.49333 4.81269L11.5067 11.186C12.86 12.4127 12.6667 14.666 10.16 14.666H5.84C3.33333 14.666 3.14 12.4127 4.49333 11.186L11.5067 4.81269C12.86 3.58603 12.6667 1.33269 10.16 1.33269Z" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
-                        <p id="banner-test">Pending test</p>
+                        <p id="banner-test">Payment Pending</p>
                       </section>
                       <section onClick={() => this.removeBanner()} id="close-pending-mobile" class="banner-close">
                         <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8" fill="none">
@@ -1395,6 +1471,11 @@ export class PayboxCheckoutWidget {
           </div>
 
         </div>
+
+        <input id="foo" onKeyPress={() => this.foo()} value="bar"></input>
+        <script type="text/javascript">
+          
+        </script>
       </Host >
     );
   }

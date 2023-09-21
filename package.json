@@ -26,10 +26,12 @@
     "generate": "stencil generate"
   },
   "dependencies": {
-    "@stencil/core": "^4.0.0"
+    "@stencil/core": "^4.0.0",
+    "jquery": "^3.7.1"
   },
   "devDependencies": {
     "@types/jest": "^27.5.2",
+    "@types/jquery": "^3.5.19",
     "@types/node": "^16.18.11",
     "jest": "^27.5.1",
     "jest-cli": "^27.5.1",

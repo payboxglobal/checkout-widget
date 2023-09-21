@@ -509,7 +509,8 @@ fieldset {
 }
 
 .banner {
-  display: none; /* to display the banners, the value of display here will be turned to flex for the particular banner using it's id */
+  display: none; 
+  /* to display the banners, the value of display here will be turned to flex for the particular banner using it's id */
   gap: 40px;
   padding: 16px;
   background: var(--card-background-color);
@@ -922,7 +923,8 @@ fieldset {
 }
 
   .banner {
-      display: none; /* to display the banners, the value of display here will be turned to flex for the particular banner using it's id */
+      display: none; 
+      /* to display the banners, the value of display here will be turned to flex for the particular banner using it's id */
       gap: 40px;
       padding: 16px;
       background: var(--card-background-color);

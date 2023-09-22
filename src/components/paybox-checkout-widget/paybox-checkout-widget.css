@@ -551,23 +551,23 @@ fieldset {
   justify-content: center;
 }
 
-#alert-container-mobile {
+[id^="alert-container-mobile"] {
   border-top: 4px solid var(--alert-banner-border-color);
 }
 
-#success-container-mobile {
+[id^="success-container-mobile"] {
   border-top: 4px solid var(--success-banner-border-color);
 }
 
-#pending-container-mobile {
+[id^="pending-container-mobile"] {
   border-top: 4px solid var(--pending-banner-border-color);
 }
 
-#failed-container-mobile {
+[id^="failed-container-mobile"] {
   border-top: 4px solid var(--failed-banner-border-color);
 }
 
-#info-container-mobile {
+[id^="info-container-mobile"] {
   border-top: 4px solid var(--info-banner-border-color);
 }
 

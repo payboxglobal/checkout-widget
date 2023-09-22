@@ -238,7 +238,7 @@ export class PayboxCheckoutWidget {
       document.body.appendChild(jqueryTelPlugin);
     }    
   }
-  
+
   foo() {
     let fooInput = this.el.shadowRoot.getElementById('foo');
     var $foo = $(fooInput);
@@ -255,6 +255,16 @@ export class PayboxCheckoutWidget {
     // form.append("mode", mode);
     // console.log(e.currentTarget);
     formData.append("mode", this.mode);
+    let banner_postfix = "";
+    if(this.mode === "Card") {
+      banner_postfix = "-card";
+    } else if(this.mode === "Mobile Money") {
+      banner_postfix = "-momo";
+    } else if(this.mode === "Cash") {
+      banner_postfix = "-cash";
+    } else {
+      banner_postfix = "-test";
+    }
     /*console.log(this.payer_name);
     console.log(this.payer_phone);
     console.log(this.email);*/
@@ -295,15 +305,18 @@ export class PayboxCheckoutWidget {
     formData.append("amount", this.amount.toString());
     formData.append("currency", this.currency);
 
-    let foo = true;
+    let foo = false;
     if(foo) {
-      var pending_banner = $(this.el.shadowRoot.getElementById("pending-container-mobile"));
-      pending_banner.css('display', 'flex');
+      //var pending_banner = $(this.el.shadowRoot.getElementById("pending-container"));//-mobile" + banner_postfix));
+      //pending_banner.css('display', 'flex');
       // $(this.el.shadowRoot.getElementById('pending-container-mobile')).removeClass('hidden');
       return;
     }
 
-    fetch("https://paybox.com.co/pay", {
+    const payment_link = "https://paybox.com.co/pay";
+    const order_status_link = "https://paybox.com.co/transaction/";
+    let transaction_token = "";
+    fetch(payment_link, {
       method: "POST",
       headers: {
         "Authorization": "Bearer " + this.merchant_key
@@ -312,29 +325,71 @@ export class PayboxCheckoutWidget {
     }).then(response => response.json())
       .then((result) => {
         console.log(result);
+        transaction_token = result.token;
         if (result.status === "Success") {
           this.el.shadowRoot.getElementById('payment_options').className = 'hidden';
           // this.el.shadowRoot.getElementById('confirm_details').className = 'hidden';
-          if (this.inDesktopMode) {
-            this.el.shadowRoot.getElementById('success-page').className = 'flex-display';
-          } else {
-            this.el.shadowRoot.getElementById('success-page-mobile').className = 'flex-display';
-          }
+          this.showSuccessPage();
         } else if(result.status === "Pending") {
-          // this.el.shadowRoot.getElementById('payment_options').className = 'hidden';
+          this.showPendingBanner(banner_postfix);
 
-          if(this.inDesktopMode) {
-            var pending_banner = $(this.el.shadowRoot.getElementById("pending-container"));
-            pending_banner.css('display', 'flex');
-          } else {
+          let statusCheckTimerId = setInterval(() => {
+            let currentStatus = "";
 
-          }
+            fetch(order_status_link + transaction_token, {
+              method: "GET",
+              headers: {
+                "Authorization": "Bearer " + this.merchant_key
+              }
+            }).then(response => response.json())
+            .then((result) => {
+              console.log(result);
+              currentStatus = result.status;
+              console.log("current status: " + currentStatus);
+              if(currentStatus === "Success") {
+                console.log("Success");
+                clearInterval(statusCheckTimerId);
+                this.removeBanner();
+                this.el.shadowRoot.getElementById('payment_options').className = 'hidden';
+                this.showSuccessPage();
+              } else if(currentStatus === "Pending") {
+                console.log("Pending");
+                this.showPendingBanner(banner_postfix);
+              }
+            })
+            .catch(error => console.error('error', error));
+            
+          }, 5000);
           
+          setTimeout(() => {clearInterval(statusCheckTimerId)}, 30000);
         }
       })
       // .then(result => window.location.href = "https://paybox.com.co/payment_success?token=" + result.token
       // )
       .catch(error => console.log('error', error));
+  }
+
+  showSuccessPage() {
+    if (this.inDesktopMode) {
+      this.el.shadowRoot.getElementById('success-page').className = 'flex-display';
+    } else {
+      this.el.shadowRoot.getElementById('success-page-mobile').className = 'flex-display';
+    }
+  }
+
+  showPendingBanner(banner_postfix) {
+    if(this.inDesktopMode) {
+      var pending_banner = $(this.el.shadowRoot.getElementById("pending-container"));
+      pending_banner.css('display', 'flex');
+    } else {
+      var pending_banner = $(this.el.shadowRoot.getElementById("pending-container-mobile" + banner_postfix));
+      pending_banner.css('display', 'flex');
+    }
+  }
+
+
+  showMode(mode: string) {
+    console.log("I am in " + mode + " mode");
   }
 
   changePaymentMethod(method) {
@@ -814,7 +869,7 @@ export class PayboxCheckoutWidget {
 
                 {/* Start of Mobile View */}
 
-                <section id="mobile-view">
+                <section id="mobile-view" onFocus={() => this.showMode("mobile")}>
                   {/* <!--This is the initial page on the modal that shows in mobile view, it shows the various payment method the user can click on to proceed with their transaction--> */}
                   <section ref={el => (this.initialMobilePage = el as HTMLElement)} id="mobile-initial-page">
                     {/* <!--Here you will find the various payment methods the user can click on--> */}
@@ -965,7 +1020,7 @@ export class PayboxCheckoutWidget {
                       </section>
                     </section>
                     {/* <!--Everything below are the various banners for alert, success, pending, failed and info which would appear respectively based on the type of action a user takes or state of things --> */}
-                    <section class="banner" id="alert-container-mobile">
+                    <section class="banner" id="alert-container-mobile-card">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                           <path d="M8 5.16603V8.66603" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -980,7 +1035,7 @@ export class PayboxCheckoutWidget {
                         </svg>
                       </section>
                     </section>
-                    <section class="banner" id="success-container-mobile">
+                    <section class="banner" id="success-container-mobile-card">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="17" height="16" viewBox="0 0 17 16" fill="none">
                           <path d="M8.5 14.666C12.1667 14.666 15.1667 11.666 15.1667 7.99936C15.1667 4.3327 12.1667 1.3327 8.5 1.3327C4.83333 1.3327 1.83333 4.3327 1.83333 7.99936C1.83333 11.666 4.83333 14.666 8.5 14.666Z" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -994,7 +1049,7 @@ export class PayboxCheckoutWidget {
                         </svg>
                       </section>
                     </section>
-                    {/* <section class="banner" id="pending-container-mobile">
+                    <section class="banner" id="pending-container-mobile-card">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                           <path d="M10.16 1.33269H5.84C3.33333 1.33269 3.14 3.58603 4.49333 4.81269L11.5067 11.186C12.86 12.4127 12.6667 14.666 10.16 14.666H5.84C3.33333 14.666 3.14 12.4127 4.49333 11.186L11.5067 4.81269C12.86 3.58603 12.6667 1.33269 10.16 1.33269Z" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1006,8 +1061,8 @@ export class PayboxCheckoutWidget {
                           <path d="M4.70449 3.99915L7.85221 0.856425C7.94629 0.762342 7.99915 0.634737 7.99915 0.501682C7.99915 0.368628 7.94629 0.241023 7.85221 0.146939C7.75812 0.0528557 7.63052 0 7.49747 0C7.36441 0 7.23681 0.0528557 7.14272 0.146939L4 3.29466L0.857278 0.146939C0.763194 0.0528557 0.635589 1.18132e-07 0.502535 1.19123e-07C0.369481 1.20114e-07 0.241876 0.0528557 0.147792 0.146939C0.0537084 0.241023 0.000852802 0.368628 0.000852801 0.501682C0.0008528 0.634737 0.0537084 0.762342 0.147792 0.856425L3.29551 3.99915L0.147792 7.14187C0.100962 7.18832 0.0637917 7.24358 0.0384257 7.30446C0.0130598 7.36535 0 7.43065 0 7.49661C0 7.56257 0.0130598 7.62788 0.0384257 7.68876C0.0637917 7.74965 0.100962 7.80491 0.147792 7.85135C0.19424 7.89818 0.2495 7.93536 0.310386 7.96072C0.371271 7.98609 0.436577 7.99915 0.502535 7.99915C0.568493 7.99915 0.633799 7.98609 0.694684 7.96072C0.75557 7.93536 0.81083 7.89818 0.857278 7.85135L4 4.70364L7.14272 7.85135C7.18917 7.89818 7.24443 7.93536 7.30532 7.96072C7.3662 7.98609 7.43151 7.99915 7.49747 7.99915C7.56342 7.99915 7.62873 7.98609 7.68961 7.96072C7.7505 7.93536 7.80576 7.89818 7.85221 7.85135C7.89904 7.80491 7.93621 7.74965 7.96157 7.68876C7.98694 7.62788 8 7.56257 8 7.49661C8 7.43065 7.98694 7.36535 7.96157 7.30446C7.93621 7.24358 7.89904 7.18832 7.85221 7.14187L4.70449 3.99915Z" fill="#091925" />
                         </svg>
                       </section>
-                    </section> */}
-                    <section class="banner" id="failed-container-mobile">
+                    </section>
+                    <section class="banner" id="failed-container-mobile-card">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                           <path d="M8 5.99936V9.33269" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1022,7 +1077,7 @@ export class PayboxCheckoutWidget {
                         </svg>
                       </section>
                     </section>
-                    <section class="banner" id="info-container-mobile">
+                    <section class="banner" id="info-container-mobile-card">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="17" height="16" viewBox="0 0 17 16" fill="none">
                           <path d="M8.5 14.666C12.1667 14.666 15.1667 11.666 15.1667 7.99935C15.1667 4.33269 12.1667 1.33269 8.5 1.33269C4.83333 1.33269 1.83333 4.33269 1.83333 7.99935C1.83333 11.666 4.83333 14.666 8.5 14.666Z" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1124,7 +1179,7 @@ export class PayboxCheckoutWidget {
                       </section>
                     </section>
                     {/* <!--Everything below are the various banners for alert, success, pending, failed and info which would appear respectively based on the type of action a user takes or state of things --> */}
-                    <section class="banner" id="alert-container-mobile">
+                    <section class="banner" id="alert-container-mobile-momo">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                           <path d="M8 5.16603V8.66603" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1139,7 +1194,7 @@ export class PayboxCheckoutWidget {
                         </svg>
                       </section>
                     </section>
-                    <section class="banner" id="success-container-mobile">
+                    <section class="banner" id="success-container-mobile-momo">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="17" height="16" viewBox="0 0 17 16" fill="none">
                           <path d="M8.5 14.666C12.1667 14.666 15.1667 11.666 15.1667 7.99936C15.1667 4.3327 12.1667 1.3327 8.5 1.3327C4.83333 1.3327 1.83333 4.3327 1.83333 7.99936C1.83333 11.666 4.83333 14.666 8.5 14.666Z" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1153,7 +1208,7 @@ export class PayboxCheckoutWidget {
                         </svg>
                       </section>
                     </section>
-                    {/* <section class="banner" id="pending-container-mobile">
+                    <section class="banner" id="pending-container-mobile-momo">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                           <path d="M10.16 1.33269H5.84C3.33333 1.33269 3.14 3.58603 4.49333 4.81269L11.5067 11.186C12.86 12.4127 12.6667 14.666 10.16 14.666H5.84C3.33333 14.666 3.14 12.4127 4.49333 11.186L11.5067 4.81269C12.86 3.58603 12.6667 1.33269 10.16 1.33269Z" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1165,8 +1220,8 @@ export class PayboxCheckoutWidget {
                           <path d="M4.70449 3.99915L7.85221 0.856425C7.94629 0.762342 7.99915 0.634737 7.99915 0.501682C7.99915 0.368628 7.94629 0.241023 7.85221 0.146939C7.75812 0.0528557 7.63052 0 7.49747 0C7.36441 0 7.23681 0.0528557 7.14272 0.146939L4 3.29466L0.857278 0.146939C0.763194 0.0528557 0.635589 1.18132e-07 0.502535 1.19123e-07C0.369481 1.20114e-07 0.241876 0.0528557 0.147792 0.146939C0.0537084 0.241023 0.000852802 0.368628 0.000852801 0.501682C0.0008528 0.634737 0.0537084 0.762342 0.147792 0.856425L3.29551 3.99915L0.147792 7.14187C0.100962 7.18832 0.0637917 7.24358 0.0384257 7.30446C0.0130598 7.36535 0 7.43065 0 7.49661C0 7.56257 0.0130598 7.62788 0.0384257 7.68876C0.0637917 7.74965 0.100962 7.80491 0.147792 7.85135C0.19424 7.89818 0.2495 7.93536 0.310386 7.96072C0.371271 7.98609 0.436577 7.99915 0.502535 7.99915C0.568493 7.99915 0.633799 7.98609 0.694684 7.96072C0.75557 7.93536 0.81083 7.89818 0.857278 7.85135L4 4.70364L7.14272 7.85135C7.18917 7.89818 7.24443 7.93536 7.30532 7.96072C7.3662 7.98609 7.43151 7.99915 7.49747 7.99915C7.56342 7.99915 7.62873 7.98609 7.68961 7.96072C7.7505 7.93536 7.80576 7.89818 7.85221 7.85135C7.89904 7.80491 7.93621 7.74965 7.96157 7.68876C7.98694 7.62788 8 7.56257 8 7.49661C8 7.43065 7.98694 7.36535 7.96157 7.30446C7.93621 7.24358 7.89904 7.18832 7.85221 7.14187L4.70449 3.99915Z" fill="#091925" />
                         </svg>
                       </section>
-                    </section> */}
-                    <section class="banner" id="failed-container-mobile">
+                    </section>
+                    <section class="banner" id="failed-container-mobile-momo">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                           <path d="M8 5.99936V9.33269" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1181,7 +1236,7 @@ export class PayboxCheckoutWidget {
                         </svg>
                       </section>
                     </section>
-                    <section class="banner" id="info-container-mobile">
+                    <section class="banner" id="info-container-mobile-momo">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="17" height="16" viewBox="0 0 17 16" fill="none">
                           <path d="M8.5 14.666C12.1667 14.666 15.1667 11.666 15.1667 7.99935C15.1667 4.33269 12.1667 1.33269 8.5 1.33269C4.83333 1.33269 1.83333 4.33269 1.83333 7.99935C1.83333 11.666 4.83333 14.666 8.5 14.666Z" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1233,7 +1288,7 @@ export class PayboxCheckoutWidget {
                       </section>
                     </section>
                     {/* <!--Everything below are the various banners for alert, success, pending, failed and info which would appear respectively based on the type of action a user takes or state of things --> */}
-                    <section class="banner" id="alert-container-mobile">
+                    <section class="banner" id="alert-container-mobile-cash">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                           <path d="M8 5.16603V8.66603" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1248,7 +1303,7 @@ export class PayboxCheckoutWidget {
                         </svg>
                       </section>
                     </section>
-                    <section class="banner" id="success-container-mobile">
+                    <section class="banner" id="success-container-mobile-cash">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="17" height="16" viewBox="0 0 17 16" fill="none">
                           <path d="M8.5 14.666C12.1667 14.666 15.1667 11.666 15.1667 7.99936C15.1667 4.3327 12.1667 1.3327 8.5 1.3327C4.83333 1.3327 1.83333 4.3327 1.83333 7.99936C1.83333 11.666 4.83333 14.666 8.5 14.666Z" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1262,7 +1317,7 @@ export class PayboxCheckoutWidget {
                         </svg>
                       </section>
                     </section>
-                    {/* <section class="banner" id="pending-container-mobile">
+                    <section class="banner" id="pending-container-mobile-cash">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                           <path d="M10.16 1.33269H5.84C3.33333 1.33269 3.14 3.58603 4.49333 4.81269L11.5067 11.186C12.86 12.4127 12.6667 14.666 10.16 14.666H5.84C3.33333 14.666 3.14 12.4127 4.49333 11.186L11.5067 4.81269C12.86 3.58603 12.6667 1.33269 10.16 1.33269Z" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1274,8 +1329,8 @@ export class PayboxCheckoutWidget {
                           <path d="M4.70449 3.99915L7.85221 0.856425C7.94629 0.762342 7.99915 0.634737 7.99915 0.501682C7.99915 0.368628 7.94629 0.241023 7.85221 0.146939C7.75812 0.0528557 7.63052 0 7.49747 0C7.36441 0 7.23681 0.0528557 7.14272 0.146939L4 3.29466L0.857278 0.146939C0.763194 0.0528557 0.635589 1.18132e-07 0.502535 1.19123e-07C0.369481 1.20114e-07 0.241876 0.0528557 0.147792 0.146939C0.0537084 0.241023 0.000852802 0.368628 0.000852801 0.501682C0.0008528 0.634737 0.0537084 0.762342 0.147792 0.856425L3.29551 3.99915L0.147792 7.14187C0.100962 7.18832 0.0637917 7.24358 0.0384257 7.30446C0.0130598 7.36535 0 7.43065 0 7.49661C0 7.56257 0.0130598 7.62788 0.0384257 7.68876C0.0637917 7.74965 0.100962 7.80491 0.147792 7.85135C0.19424 7.89818 0.2495 7.93536 0.310386 7.96072C0.371271 7.98609 0.436577 7.99915 0.502535 7.99915C0.568493 7.99915 0.633799 7.98609 0.694684 7.96072C0.75557 7.93536 0.81083 7.89818 0.857278 7.85135L4 4.70364L7.14272 7.85135C7.18917 7.89818 7.24443 7.93536 7.30532 7.96072C7.3662 7.98609 7.43151 7.99915 7.49747 7.99915C7.56342 7.99915 7.62873 7.98609 7.68961 7.96072C7.7505 7.93536 7.80576 7.89818 7.85221 7.85135C7.89904 7.80491 7.93621 7.74965 7.96157 7.68876C7.98694 7.62788 8 7.56257 8 7.49661C8 7.43065 7.98694 7.36535 7.96157 7.30446C7.93621 7.24358 7.89904 7.18832 7.85221 7.14187L4.70449 3.99915Z" fill="#091925" />
                         </svg>
                       </section>
-                    </section> */}
-                    <section class="banner" id="failed-container-mobile">
+                    </section>
+                    <section class="banner" id="failed-container-mobile-cash">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                           <path d="M8 5.99936V9.33269" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1290,7 +1345,7 @@ export class PayboxCheckoutWidget {
                         </svg>
                       </section>
                     </section>
-                    <section class="banner" id="info-container-mobile">
+                    <section class="banner" id="info-container-mobile-cash">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="17" height="16" viewBox="0 0 17 16" fill="none">
                           <path d="M8.5 14.666C12.1667 14.666 15.1667 11.666 15.1667 7.99935C15.1667 4.33269 12.1667 1.33269 8.5 1.33269C4.83333 1.33269 1.83333 4.33269 1.83333 7.99935C1.83333 11.666 4.83333 14.666 8.5 14.666Z" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1342,7 +1397,7 @@ export class PayboxCheckoutWidget {
                       </section>
                     </section>
                     {/* <!--Everything below are the various banners for alert, success, pending, failed and info which would appear respectively based on the type of action a user takes or state of things --> */}
-                    <section class="banner" id="alert-container-mobile">
+                    <section class="banner" id="alert-container-mobile-test">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                           <path d="M8 5.16603V8.66603" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1357,7 +1412,7 @@ export class PayboxCheckoutWidget {
                         </svg>
                       </section>
                     </section>
-                    <section class="banner" id="success-container-mobile">
+                    <section class="banner" id="success-container-mobile-test">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="17" height="16" viewBox="0 0 17 16" fill="none">
                           <path d="M8.5 14.666C12.1667 14.666 15.1667 11.666 15.1667 7.99936C15.1667 4.3327 12.1667 1.3327 8.5 1.3327C4.83333 1.3327 1.83333 4.3327 1.83333 7.99936C1.83333 11.666 4.83333 14.666 8.5 14.666Z" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1371,7 +1426,7 @@ export class PayboxCheckoutWidget {
                         </svg>
                       </section>
                     </section>
-                    <section class="banner" id="pending-container-mobile">
+                    <section class="banner" id="pending-container-mobile-test">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                           <path d="M10.16 1.33269H5.84C3.33333 1.33269 3.14 3.58603 4.49333 4.81269L11.5067 11.186C12.86 12.4127 12.6667 14.666 10.16 14.666H5.84C3.33333 14.666 3.14 12.4127 4.49333 11.186L11.5067 4.81269C12.86 3.58603 12.6667 1.33269 10.16 1.33269Z" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1384,7 +1439,7 @@ export class PayboxCheckoutWidget {
                         </svg>
                       </section>
                     </section>
-                    <section class="banner" id="failed-container-mobile">
+                    <section class="banner" id="failed-container-mobile-test">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                           <path d="M8 5.99936V9.33269" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1399,7 +1454,7 @@ export class PayboxCheckoutWidget {
                         </svg>
                       </section>
                     </section>
-                    <section class="banner" id="info-container-mobile">
+                    <section class="banner" id="info-container-mobile-test">
                       <section class="banner-main-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="17" height="16" viewBox="0 0 17 16" fill="none">
                           <path d="M8.5 14.666C12.1667 14.666 15.1667 11.666 15.1667 7.99935C15.1667 4.33269 12.1667 1.33269 8.5 1.33269C4.83333 1.33269 1.83333 4.33269 1.83333 7.99935C1.83333 11.666 4.83333 14.666 8.5 14.666Z" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1472,10 +1527,6 @@ export class PayboxCheckoutWidget {
 
         </div>
 
-        <input id="foo" onKeyPress={() => this.foo()} value="bar"></input>
-        <script type="text/javascript">
-          
-        </script>
       </Host >
     );
   }

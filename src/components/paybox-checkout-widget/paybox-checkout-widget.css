@@ -1,3 +1,11 @@
+@import url('../../../node_modules/intl-tel-input/build/css/intlTelInput.css');
+
+.iti__flag {background-image: url("assets/img/flags.png");}
+
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .iti__flag {background-image: url("assets/img/flags@2x.png");}
+}
+
 
 :host {
   --body-text-color: hsla(206, 62%, 9%, 1);
@@ -411,14 +419,14 @@ fieldset {
   font-size: 1rem;
   font-weight: 400;
   border: none;
-  padding: 4px;
+  /* padding: 4px; */
 }
 
 #mobile-number-m {
   font-size: 1rem;
   font-weight: 400;
   border: none;
-  padding: 4px;
+  /* padding: 4px; */
 }
 
 #mobile-number:focus {
@@ -439,7 +447,13 @@ fieldset {
   border: 2.4px solid var(--primary-color);
 }
 
-#error-container {
+#error-container-m {
+  display: none;
+  gap: 4px;
+  align-items: center;
+}
+
+#error-container-momo-m {
   display: none;
   gap: 4px;
   align-items: center;
@@ -850,6 +864,12 @@ fieldset {
       gap: 4px;
       align-items: center;
   }
+
+  #error-container-momo {
+    display: none;
+    gap: 4px;
+    align-items: center;
+}
 
   .error-message {
       color: var(--error-message-color);

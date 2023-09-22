@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@stencil/core": "^4.0.0",
+    "intl-tel-input": "^18.2.1",
     "jquery": "^3.7.1"
   },
   "devDependencies": {

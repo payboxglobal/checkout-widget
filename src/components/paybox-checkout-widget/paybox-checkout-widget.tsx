@@ -20,7 +20,7 @@ export class PayboxCheckoutWidget {
   @State() gottenConfigs: boolean = false;
 
   @Prop() email: string;
-  @State() mode: string; // "Test", "Cash", "Mobile Money", "Card"
+  @State() mode: string = "Card"; // "Test", "Cash", "Mobile Money", "Card"
 
   @Prop() payer_phone: string;
   @State() mobileNumber: string;
@@ -51,6 +51,10 @@ export class PayboxCheckoutWidget {
   desktopIti: intlTelInput;
   mobileIti: intlTelInput;
 
+
+  // Todo: Find out about card redirection
+  // Todo: Clean up console.logs
+  // Todo: Work on iso code mappings
 
   createNetworkElement(inputId, inputName, inputValue, labelId, imgSrc, imgAlt, labelText) {
     // Create the <fieldset> element
@@ -363,6 +367,10 @@ export class PayboxCheckoutWidget {
           this.showSuccessPage();
         } else if (result.status === "Pending") {
           this.showPendingBanner(banner_postfix);
+          if(this.mode === "Card") {
+            console.log(result.checkout_url);
+            window.location.href = result.checkout_url;
+          }
 
           let statusCheckTimerId = setInterval(() => {
             let currentStatus = "";
@@ -738,7 +746,7 @@ export class PayboxCheckoutWidget {
                             <h2 class="content-title">Card</h2>
                             <p class="content-text">Click button below to make your payment with card</p>
                           </section>
-                          <button id="card-btn" class="desktop-btn">Pay GHS <span class="amount-value"></span></button>
+                          <button id="card-btn" onClick={() => this.inDesktopView()} class="desktop-btn">Pay GHS <span class="amount-value"></span></button>
                         </section>
                         <section class="secured-container">
                           <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">

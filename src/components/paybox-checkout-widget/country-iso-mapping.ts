@@ -1,3 +1,4 @@
 export const isoMap = new Map<string, string>([
-    ['GHS', 'gh']
+    ['GHS', 'gh'],
+    ['NGN', 'ng']
 ]);

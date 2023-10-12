@@ -1,4 +1,3 @@
 export const isoMap = new Map<string, string>([
-    ['GHS', 'gh'],
-    ['NGN', 'ng']
+    ['DZD', 'dz'], ['AOA', 'ao'], ['XOF', 'bj'], ['BWP', 'bw'], ['XOF', 'bf'], ['BIF', 'bi'], ['CVE', 'cv'], ['XAF', 'cm'], ['XAF', 'td'], ['KMF', 'km'], ['XAF', 'cg'], ['XOF', 'ci'], ['DJF', 'dj'], ['EGP', 'eg'], ['XAF', 'gq'], ['ERN', 'er'], ['SZL', 'sz'], ['ETB', 'et'], ['XAF', 'ga'], ['GMD', 'gm'], ['GHS', 'gh'], ['GNF', 'gn'], ['XOF', 'gw'], ['XOF', 'ci'], ['KES', 'ke'], ['LSL', 'ls'], ['LRD', 'lr'], ['LYD', 'ly'], ['MGA', 'mg'], ['MWK', 'mw'], ['XOF', 'ml'], ['MRU', 'mr'], ['MUR', 'mu'], ['MAD', 'ma'], ['MZN', 'mz'], ['NAD', 'na'], ['XOF', 'ne'], ['NGN', 'ng'], ['RWF', 'rw'], ['STN', 'st'], ['XOF', 'sn'], ['SLL', 'sl'], ['SOS', 'so'], ['ZAR', 'za'], ['SSP', 'ss'], ['SDG', 'sd'], ['SZL', 'sz'], ['TZS', 'tz'], ['XOF', 'tg'], ['TND', 'tn'], ['UGX', 'ug'], ['AED', 'ae'], ['ZMW', 'zm'], ['ZWL', 'zw']
 ]);

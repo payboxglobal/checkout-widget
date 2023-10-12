@@ -1,6 +1,7 @@
 import { Component, Host, Prop, State, h, Event, EventEmitter, Element } from '@stencil/core';
 import * as widgetScript from '../../assets/scripts/script.js';
 import intlTelInput from 'intl-tel-input';
+import { isoMap } from './country-iso-mapping.js';
 
 @Component({
   tag: 'paybox-checkout-widget',
@@ -18,6 +19,7 @@ export class PayboxCheckoutWidget {
   @State() isInDeveloperMode: boolean = false;
   @State() cashIsEnabled: boolean = false;
   @State() gottenConfigs: boolean = false;
+  @State() loadedFlags: boolean = false;
 
   @Prop() email: string;
   @State() mode: string = "Card"; // "Test", "Cash", "Mobile Money", "Card"
@@ -236,26 +238,6 @@ export class PayboxCheckoutWidget {
       document.body.appendChild(jqueryJSElement);
     }
 
-    const linkToTelPlugin = 'https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/utils.js';
-
-    const desktopPhoneInput = this.el.shadowRoot.getElementById('mobile-number');
-    const mobilePhoneInput = this.el.shadowRoot.getElementById('mobile-number-m');
-
-
-    this.desktopIti = intlTelInput(desktopPhoneInput, {
-      utilsScript: linkToTelPlugin,
-      onlyCountries: ["GH"],
-      allowDropdown: false,
-      autoPlaceholde: "aggressive"
-    });
-
-    this.mobileIti = intlTelInput(mobilePhoneInput, {
-      utilsScript: linkToTelPlugin,
-      onlyCountries: ["GH"],
-      allowDropdown: false,
-      autoPlaceholde: "aggressive"
-    });
-
     // console.log(mobileTelInput);
   }
 
@@ -325,10 +307,11 @@ export class PayboxCheckoutWidget {
 
       if (selectedRadioButton === null) {
         this.showMomoSelectionError();
+        return;
       } else {
         this.hideMomoSelectionError();
       }
-      const mobile_network = selectedRadioButton.value;
+      const mobile_network = selectedRadioButton?.value;
 
       console.log(mobile_network);
       console.log(mobile_number);
@@ -564,6 +547,36 @@ export class PayboxCheckoutWidget {
     if (this.merchant_key === null || this.merchant_key === "" || this.amount === null) {
       return;
     }
+
+    if(!this.loadedFlags) {
+
+      const currencySpans = this.el.shadowRoot.querySelectorAll('.currency-span');
+      currencySpans.forEach((currencySpan) => {
+        currencySpan.textContent = this.currency;
+      }); 
+
+      this.loadedFlags = true;
+      const linkToTelPlugin = 'https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/utils.js';
+
+      const desktopPhoneInput = this.el.shadowRoot.getElementById('mobile-number');
+      const mobilePhoneInput = this.el.shadowRoot.getElementById('mobile-number-m');
+
+
+      this.desktopIti = intlTelInput(desktopPhoneInput, {
+        utilsScript: linkToTelPlugin,
+        onlyCountries: [isoMap.get(this.currency)],
+        allowDropdown: false,
+        autoPlaceholde: "aggressive"
+      });
+
+      this.mobileIti = intlTelInput(mobilePhoneInput, {
+        utilsScript: linkToTelPlugin,
+        onlyCountries: [isoMap.get(this.currency)],
+        allowDropdown: false,
+        autoPlaceholde: "aggressive"
+      });
+    }
+
     this.el.shadowRoot.querySelectorAll<HTMLElement>(".amount-value").forEach((node) => { node.innerHTML = this.amount.toString(); });
     if (!this.gottenConfigs) {
       this.checkUserConfigs();
@@ -608,6 +621,7 @@ export class PayboxCheckoutWidget {
       .then(activeNetworks => {
         const networkFieldsParents = this.el.shadowRoot.getElementById('networks');
         const networkFieldsParentsMobile = this.el.shadowRoot.getElementById('networks-mobile');
+        console.log("What's going on here");
         // createNetworkElement(inputId, inputName, inputValue, labelId, imgSrc, imgAlt, labelText)
         for (let i = 0; i < activeNetworks.length; i++) {
           let currentNetwork = activeNetworks[i];
@@ -637,7 +651,7 @@ export class PayboxCheckoutWidget {
               'airtel-network', '../../assets/svg/airtel.svg', 'airteltigo money logo', 'AIRTELTIGO Money'));
           }
         }
-      })
+      });
   }
 
   hideModal(e) {
@@ -657,7 +671,7 @@ export class PayboxCheckoutWidget {
   render() {
     return (
       <Host>
-        <button class="mobile-btn" onClick={() => this.openModal()}>Pay with PayBox</button>
+        <button id='paybox-button' onClick={() => this.openModal()}>Pay with PayBox</button>
 
         <div class="modal-overlay hidden" id='modal-container'>
           <div class="modal-content justify-items-center" id='modal-content'>
@@ -673,7 +687,7 @@ export class PayboxCheckoutWidget {
                       <img src="../../assets/svg/recipient-account-logo.svg" alt="recipient logo" loading="eager" />
                     </figure>
                     <section id="header-texts">
-                      <p id="pay-text">Pay <strong id="amount">GHS <span class="amount-value"></span></strong></p>
+                      <p id="pay-text">Pay <strong id="amount"><span class="currency-span">GHS</span> <span class="amount-value"></span></strong></p>
                       <p id="sender-email">{this.email}</p>
                     </section>
                     {/* <!--This is the button that the user can click to close the modal--> */}
@@ -746,7 +760,7 @@ export class PayboxCheckoutWidget {
                             <h2 class="content-title">Card</h2>
                             <p class="content-text">Click button below to make your payment with card</p>
                           </section>
-                          <button id="card-btn" onClick={() => this.inDesktopView()} class="desktop-btn">Pay GHS <span class="amount-value"></span></button>
+                          <button id="card-btn" onClick={() => this.inDesktopView()} class="desktop-btn">Pay <span class="currency-span">GHS</span> <span class="amount-value"></span></button>
                         </section>
                         <section class="secured-container">
                           <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
@@ -791,7 +805,7 @@ export class PayboxCheckoutWidget {
                               </section>
                             </fieldset>
                           </fieldset>
-                          <button onClick={() => this.inDesktopView()} id="card-btn" class="desktop-btn">Pay GHS <span class="amount-value"></span></button>
+                          <button onClick={() => this.inDesktopView()} id="card-btn" class="desktop-btn">Pay <span class="currency-span">GHS</span> <span class="amount-value"></span></button>
                         </section>
                         <section class="secured-container">
                           <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
@@ -807,7 +821,7 @@ export class PayboxCheckoutWidget {
                             <h2 class="content-title">Cash payment</h2>
                             <p class="content-text">Click button below to make your payment with card</p>
                           </section>
-                          <button id="card-btn" class="desktop-btn">Pay GHS <span class="amount-value"></span></button>
+                          <button id="card-btn" class="desktop-btn">Pay <span class="currency-span">GHS</span> <span class="amount-value"></span></button>
                         </section>
                         <section class={`${this.cashIsEnabled ? "secured-container" : "hidden"}`}>
                           <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
@@ -823,7 +837,7 @@ export class PayboxCheckoutWidget {
                             <h2 class="content-title">Test</h2>
                             <p class="content-text">Click button below to test out the payment system</p>
                           </section>
-                          <button id="card-btn" class="desktop-btn">Pay GHS <span class="amount-value"></span></button>
+                          <button id="card-btn" class="desktop-btn">Pay <span class="currency-span">GHS</span> <span class="amount-value"></span></button>
                         </section>
                         <section class={`${this.isInDeveloperMode ? "secured-container" : "hidden"}`}>
                           <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
@@ -953,7 +967,7 @@ export class PayboxCheckoutWidget {
                       </figure>
                       <section id="mobile-top-content">
                         <h1 id="title">PayBox Checkout</h1>
-                        <p id="subtext">Use one of the payments method below to pay GHS <span class="amount-value"></span> to Paybox:</p>
+                        <p id="subtext">Use one of the payments method below to pay <span class="currency-span">GHS</span> <span class="amount-value"></span> to Paybox:</p>
                       </section>
                       {/* <!--This is exactly where the various payment methods are--> */}
                       <nav id="navbar">
@@ -1079,7 +1093,7 @@ export class PayboxCheckoutWidget {
                           <img src="../../assets/svg/recipient-account-logo.svg" alt="recipient logo" loading="eager" />
                         </figure>
                         <section class="sender-texts">
-                          <p class="sender-text">Pay <strong id="amount">GHS <span class="amount-value"></span></strong></p>
+                          <p class="sender-text">Pay <strong id="amount"><span class="currency-span">GHS</span> <span class="amount-value"></span></strong></p>
                           <p class="sender-email">{this.email}</p>
                         </section>
                       </section>
@@ -1089,7 +1103,7 @@ export class PayboxCheckoutWidget {
                             <h2 class="content-title">Card</h2>
                             <p class="content-text">Click button below to make your payment with card</p>
                           </section>
-                          <button id="card-btn" onClick={() => this.inMobileView()} class="mobile-btn">Pay GHS <span class="amount-value"></span></button>
+                          <button id="card-btn" onClick={() => this.inMobileView()} class="mobile-btn">Pay <span class="currency-span">GHS</span> <span class="amount-value"></span></button>
                         </section>
                       </section>
                     </section>
@@ -1188,7 +1202,7 @@ export class PayboxCheckoutWidget {
                           <img src="../../assets/svg/recipient-account-logo.svg" alt="recipient logo" loading="eager" />
                         </figure>
                         <section class="sender-texts">
-                          <p class="sender-text">Pay <strong id="amount">GHS <span class="amount-value"></span></strong></p>
+                          <p class="sender-text">Pay <strong id="amount"><span class="currency-span">GHS</span> <span class="amount-value"></span></strong></p>
                           <p class="sender-email">{this.email}</p>
                         </section>
                       </section>
@@ -1228,7 +1242,7 @@ export class PayboxCheckoutWidget {
                                 </section>
                               </fieldset>
                             </fieldset>
-                            <button onClick={() => this.inMobileView()} id="mobile-money-btn" type="submit" class="mobile-btn">Pay GHS <span class="amount-value"></span></button>
+                            <button onClick={() => this.inMobileView()} id="mobile-money-btn" type="submit" class="mobile-btn">Pay <span class="currency-span">GHS</span> <span class="amount-value"></span></button>
                           </section>
                         </section>
                       </section>
@@ -1328,7 +1342,7 @@ export class PayboxCheckoutWidget {
                           <img src="../../assets/svg/recipient-account-logo.svg" alt="recipient logo" loading="eager" />
                         </figure>
                         <section class="sender-texts">
-                          <p class="sender-text">Pay <strong id="amount">GHS <span class="amount-value"></span></strong></p>
+                          <p class="sender-text">Pay <strong id="amount"><span class="currency-span">GHS</span> <span class="amount-value"></span></strong></p>
                           <p class="sender-email">{this.email}</p>
                         </section>
                       </section>
@@ -1338,7 +1352,7 @@ export class PayboxCheckoutWidget {
                             <h2 class="content-title">Cash payment</h2>
                             <p class="content-text">Click button below to make your payment with cash</p>
                           </section>
-                          <button id="card-btn" onClick={() => this.inMobileView()} class="mobile-btn">Pay GHS <span class="amount-value"></span></button>
+                          <button id="card-btn" onClick={() => this.inMobileView()} class="mobile-btn">Pay <span class="currency-span">GHS</span> <span class="amount-value"></span></button>
                         </section>
                       </section>
                     </section>
@@ -1437,7 +1451,7 @@ export class PayboxCheckoutWidget {
                           <img src="../../assets/svg/recipient-account-logo.svg" alt="recipient logo" loading="eager" />
                         </figure>
                         <section class="sender-texts">
-                          <p class="sender-text">Pay <strong id="amount">GHS <span class="amount-value"></span></strong></p>
+                          <p class="sender-text">Pay <strong id="amount"><span class="currency-span">GHS</span> <span class="amount-value"></span></strong></p>
                           <p class="sender-email">{this.email}</p>
                         </section>
                       </section>
@@ -1447,7 +1461,7 @@ export class PayboxCheckoutWidget {
                             <h2 class="content-title">Test</h2>
                             <p class="content-text">Click button below to test out the payment system</p>
                           </section>
-                          <button id="card-btn" onClick={() => this.inMobileView()} class="mobile-btn">Pay GHS <span class="amount-value"></span></button>
+                          <button id="card-btn" onClick={() => this.inMobileView()} class="mobile-btn">Pay <span class="currency-span">GHS</span> <span class="amount-value"></span></button>
                         </section>
                       </section>
                     </section>
@@ -1548,7 +1562,7 @@ export class PayboxCheckoutWidget {
               </svg>
               <section id="success-texts">
                 <h1 id="success-header-text">Payment done!</h1>
-                <p id="success-subtext">You've successfully paid PayBox GHS <span class="amount-value"></span> from your account.</p>
+                <p id="success-subtext">You've successfully paid PayBox <span class="currency-span">GHS</span> <span class="amount-value"></span> from your account.</p>
               </section>
               <button id="card-btn" class="mobile-btn" onClick={() => this.closeModal()}>Close</button>
             </section>
@@ -1572,7 +1586,7 @@ export class PayboxCheckoutWidget {
               </svg>
               <section id="success-texts">
                 <h1 id="success-header-text">Payment done!</h1>
-                <p id="success-subtext">You've successfully paid PayBox GHS <span class="amount-value"></span> from your account.</p>
+                <p id="success-subtext">You've successfully paid PayBox <span class="currency-span">GHS</span> <span class="amount-value"></span> from your account.</p>
               </section>
               <button id="card-btn" type='button' onClick={() => this.closeModal()} class="desktop-btn">Close</button>
             </section>

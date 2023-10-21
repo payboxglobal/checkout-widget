@@ -54,10 +54,6 @@ export class PayboxCheckoutWidget {
   mobileIti: intlTelInput;
 
 
-  // Todo: Find out about card redirection
-  // Todo: Clean up console.logs
-  // Todo: Work on iso code mappings
-
   createNetworkElement(inputId, inputName, inputValue, labelId, imgSrc, imgAlt, labelText) {
     // Create the <fieldset> element
     const fieldset = document.createElement('fieldset');
@@ -237,29 +233,12 @@ export class PayboxCheckoutWidget {
       jqueryJSElement.setAttribute('src', jQueryJSLink);
       document.body.appendChild(jqueryJSElement);
     }
-
-    // console.log(mobileTelInput);
   }
-
-  foo() {
-    console.log();
-
-    if (this.desktopIti.isValidNumber()) {
-      console.log("This is a possible number: " + this.desktopIti.getNumber());
-    } else {
-      // console.log("This is not a real number: " + this.desktopIti.getNumber());
-    }
-  }
-
 
   payRequest(e) {
-    // Send HTTP payment request to PayBox.com.co
-    // console.log(form);
     e.preventDefault();
 
     const formData = new FormData();
-    // form.append("mode", mode);
-    // console.log(e.currentTarget);
     formData.append("mode", this.mode);
     let banner_postfix = "";
     if (this.mode === "Card") {
@@ -271,14 +250,10 @@ export class PayboxCheckoutWidget {
     } else {
       banner_postfix = "-test";
     }
-    /*console.log(this.payer_name);
-    console.log(this.payer_phone);
-    console.log(this.email);*/
-    console.log("Actual Mode: " + this.mode);
+    
     formData.append("payerName", this.payer_name);
     formData.append("payerPhone", this.payer_phone);
     formData.append("payerEmail", this.email);
-    // console.log("In desktop mode? " + this.inDesktopMode);
 
     if (this.mode === "Mobile Money") {
       var mobile_number = null;
@@ -313,9 +288,6 @@ export class PayboxCheckoutWidget {
       }
       const mobile_network = selectedRadioButton?.value;
 
-      console.log(mobile_network);
-      console.log(mobile_number);
-
       formData.append("mobile_number", mobile_number);
       formData.append("mobile_network", mobile_network);
     }
@@ -342,7 +314,6 @@ export class PayboxCheckoutWidget {
       body: formData
     }).then(response => response.json())
       .then((result) => {
-        console.log(result);
         transaction_token = result.token;
         if (result.status === "Success") {
           this.el.shadowRoot.getElementById('payment_options').className = 'hidden';
@@ -350,9 +321,10 @@ export class PayboxCheckoutWidget {
           this.showSuccessPage();
         } else if (result.status === "Pending") {
           this.showPendingBanner(banner_postfix);
+          let timeToStopStatusCheck = 30000;
           if(this.mode === "Card") {
-            console.log(result.checkout_url);
-            window.location.href = result.checkout_url;
+            timeToStopStatusCheck = 60000;
+            window.open(result.checkout_url, '_blank');
           }
 
           let statusCheckTimerId = setInterval(() => {
@@ -365,17 +337,13 @@ export class PayboxCheckoutWidget {
               }
             }).then(response => response.json())
               .then((result) => {
-                console.log(result);
                 currentStatus = result.status;
-                console.log("current status: " + currentStatus);
                 if (currentStatus === "Success") {
-                  console.log("Success");
                   clearInterval(statusCheckTimerId);
                   this.removeBanners();
                   this.el.shadowRoot.getElementById('payment_options').className = 'hidden';
                   this.showSuccessPage();
                 } else if (currentStatus === "Pending") {
-                  console.log("Pending");
                   this.removeBanners();
                   this.showPendingBanner(banner_postfix);
                 } else if (currentStatus === "Failed") {
@@ -388,7 +356,7 @@ export class PayboxCheckoutWidget {
 
           }, 5000);
 
-          setTimeout(() => { clearInterval(statusCheckTimerId) }, 30000);
+          setTimeout(() => { clearInterval(statusCheckTimerId) }, timeToStopStatusCheck);
         }
       })
       // .then(result => window.location.href = "https://paybox.com.co/payment_success?token=" + result.token
@@ -539,11 +507,6 @@ export class PayboxCheckoutWidget {
   }
 
   openModal() {
-    /*console.log(this.payer_name);
-    console.log(this.payer_phone);
-    console.log(this.amount);
-    console.log(this.currency);
-    console.log(this.merchant_key);*/
     if (this.merchant_key === null || this.merchant_key === "" || this.amount === null) {
       return;
     }
@@ -593,7 +556,6 @@ export class PayboxCheckoutWidget {
     })
       .then(response => response.json())
       .then(result => {
-        // console.log(result);
         if (result.mode === "Development") {
           this.isInDeveloperMode = true;
         } else {
@@ -621,7 +583,6 @@ export class PayboxCheckoutWidget {
       .then(activeNetworks => {
         const networkFieldsParents = this.el.shadowRoot.getElementById('networks');
         const networkFieldsParentsMobile = this.el.shadowRoot.getElementById('networks-mobile');
-        console.log("What's going on here");
         // createNetworkElement(inputId, inputName, inputValue, labelId, imgSrc, imgAlt, labelText)
         for (let i = 0; i < activeNetworks.length; i++) {
           let currentNetwork = activeNetworks[i];
@@ -793,7 +754,7 @@ export class PayboxCheckoutWidget {
                             <fieldset id="main-mobile-container">
                               <fieldset id="mobile-number-container">
                                 <label htmlFor="mobile-number" id="mobile-number-text">What’s your mobile number?</label>
-                                <input type="text" id="mobile-number" name="mobile_number" onKeyUp={() => this.foo()} />
+                                <input type="text" id="mobile-number" name="mobile_number" />
                               </fieldset>
                               <section id="error-container">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -1017,7 +978,7 @@ export class PayboxCheckoutWidget {
                               </svg>
                             </a>
                           </li>
-                          <li class="nav-item">
+                          <li class={`${this.cashIsEnabled ? "nav-item" : "hidden"}`} >
                             <a onClick={() => this.goMobileCashPaymentPage()} href="#">
                               <section class="nav-icon-text">
                                 <svg class="navitem-icon" xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
@@ -1039,9 +1000,9 @@ export class PayboxCheckoutWidget {
                               </svg>
                             </a>
                           </li>
-                          <li class="nav-item">
+                          <li class={`${this.isInDeveloperMode ? "nav-item" : "hidden"}`} >
                             <a onClick={() => this.goMobileTestPage()} href="#">
-                              <section class="nav-icon-text">
+                              <section class={`${this.isInDeveloperMode ? "nav-icon-text" : "hidden"}`} >
                                 <svg class="navitem-icon" xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
                                   <path d="M3.41418 7.44995L12.2442 12.5599L21.0142 7.47992" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                                   <path d="M12.2441 21.6199V12.5499" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1065,7 +1026,7 @@ export class PayboxCheckoutWidget {
                         </ul>
                       </nav>
                     </section>
-                    <section class="secured-container">
+                    <section class={`${this.isInDeveloperMode ? "secured-container" : "hidden"}`} >
                       <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
                         <path d="M18.5 7.00989C18.5 3.76989 15.741 1.00989 12.5 1.00989C9.257 1.00989 6.5 3.76989 6.5 7.00989V9.73289C5.21101 11.1885 4.49957 13.0656 4.5 15.0099C4.5 19.4259 8.084 23.0099 12.501 23.0099C16.918 23.0099 20.5 19.4259 20.5 15.0099C20.5006 13.0653 19.7891 11.1878 18.5 9.73189V7.00989ZM8.5 7.00989C8.5 4.87889 10.369 3.00989 12.5 3.00989C14.631 3.00989 16.5 4.87889 16.5 7.00989V8.08889C15.2853 7.38236 13.9051 7.01025 12.4999 7.01042C11.0946 7.0106 9.71453 7.38306 8.5 8.08989V7.00989ZM11 19.4239L7.293 15.7169L8.707 14.3029L11 16.5959L16.293 11.3029L17.707 12.7169L11 19.4239Z" fill="#2C7CB9" />
                       </svg>
@@ -1336,8 +1297,8 @@ export class PayboxCheckoutWidget {
                       </figure>
                     </section>
                     {/* <!--This is where the main content is when the user clicks on the cash payment method on the initial screen--> */}
-                    <section class="main-content">
-                      <section class="recipient-logo-and-texts">
+                    <section class={`${this.cashIsEnabled ? "main-content" : "hidden"}`} >
+                      <section class={`${this.cashIsEnabled ? "recipient-logo-and-texts" : "hidden"}`} >
                         <figure id="recipient-logo">
                           <img src="../../assets/svg/recipient-account-logo.svg" alt="recipient logo" loading="eager" />
                         </figure>
@@ -1346,7 +1307,7 @@ export class PayboxCheckoutWidget {
                           <p class="sender-email">{this.email}</p>
                         </section>
                       </section>
-                      <section class="payment-content-container">
+                      <section class={`${this.cashIsEnabled ? "payment-content-container" : "hidden"}`} >
                         <section class="content-details">
                           <section class="content-top-texts">
                             <h2 class="content-title">Cash payment</h2>

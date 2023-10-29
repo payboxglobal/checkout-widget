@@ -1,9 +1,9 @@
 @import url('../../../node_modules/intl-tel-input/build/css/intlTelInput.css');
 
-.iti__flag {background-image: url("assets/img/flags.png");}
+.iti__flag {background-image: url("/src/assets/img/flags.png");}
 
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-  .iti__flag {background-image: url("assets/img/flags@2x.png");}
+  .iti__flag {background-image: url("/src/assets/img/flags@2x.png");}
 }
 
 

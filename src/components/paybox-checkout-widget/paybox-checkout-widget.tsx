@@ -645,7 +645,7 @@ export class PayboxCheckoutWidget {
                   {/* <!--This is the header which contains the close button at the far right, which would allow the user to easily close the modal if they choose to--> */}
                   <header>
                     <figure id="recipient-logo">
-                      <img src="../../assets/svg/recipient-account-logo.svg" alt="recipient logo" loading="eager" />
+                      <img src="/src/assets/svg/recipient-account-logo.svg" alt="recipient logo" loading="eager" />
                     </figure>
                     <section id="header-texts">
                       <p id="pay-text">Pay <strong id="amount"><span class="currency-span">GHS</span> <span class="amount-value"></span></strong></p>
@@ -653,7 +653,7 @@ export class PayboxCheckoutWidget {
                     </section>
                     {/* <!--This is the button that the user can click to close the modal--> */}
                     <figure class="close-icon" onClick={() => this.closeModal()}>
-                      <img onClick={() => this.closeModal()} src="../../assets/svg/close-icon.svg" alt="close icon button" loading="eager" />
+                      <img onClick={() => this.closeModal()} src="/src/assets/svg/close-icon.svg" alt="close icon button" loading="eager" />
                     </figure>
                   </header>
                   {/* <!--This is the card containing the elements or content that the user will mostly interact with, here is where the various payment method tabs with their respective contents are found--> */}
@@ -924,7 +924,7 @@ export class PayboxCheckoutWidget {
                     {/* <!--Here you will find the various payment methods the user can click on--> */}
                     <section id="initial-top-section">
                       <figure class="close-icon">
-                        <img onClick={() => this.closeModal()} src="../../assets/svg/close-icon.svg" alt="close icon button" loading="eager" />
+                        <img onClick={() => this.closeModal()} src="/src/assets/svg/close-icon.svg" alt="close icon button" loading="eager" />
                       </figure>
                       <section id="mobile-top-content">
                         <h1 id="title">PayBox Checkout</h1>
@@ -1044,14 +1044,14 @@ export class PayboxCheckoutWidget {
                         <p class="back-text">Back</p>
                       </section>
                       <figure class="close-icon">
-                        <img onClick={() => this.closeModal()} src="../../assets/svg/close-icon.svg" alt="close icon button" loading="eager" />
+                        <img onClick={() => this.closeModal()} src="/src/assets/svg/close-icon.svg" alt="close icon button" loading="eager" />
                       </figure>
                     </section>
                     {/* <!--This is where the main content is when the user clicks on the card payment method on the initial screen--> */}
                     <section class="main-content">
                       <section class="recipient-logo-and-texts">
                         <figure id="recipient-logo">
-                          <img src="../../assets/svg/recipient-account-logo.svg" alt="recipient logo" loading="eager" />
+                          <img src="/src/assets/svg/recipient-account-logo.svg" alt="recipient logo" loading="eager" />
                         </figure>
                         <section class="sender-texts">
                           <p class="sender-text">Pay <strong id="amount"><span class="currency-span">GHS</span> <span class="amount-value"></span></strong></p>
@@ -1153,14 +1153,14 @@ export class PayboxCheckoutWidget {
                         <p class="back-text">Back</p>
                       </section>
                       <figure class="close-icon">
-                        <img onClick={() => this.closeModal()} src="../../assets/svg/close-icon.svg" alt="close icon button" loading="eager" />
+                        <img onClick={() => this.closeModal()} src="/src/assets/svg/close-icon.svg" alt="close icon button" loading="eager" />
                       </figure>
                     </section>
                     {/* <!--This is where the main content is when the user clicks on the mobile money payment method on the initial screen--> */}
                     <section class="main-content">
                       <section class="recipient-logo-and-texts">
                         <figure id="recipient-logo">
-                          <img src="../../assets/svg/recipient-account-logo.svg" alt="recipient logo" loading="eager" />
+                          <img src="/src/assets/svg/recipient-account-logo.svg" alt="recipient logo" loading="eager" />
                         </figure>
                         <section class="sender-texts">
                           <p class="sender-text">Pay <strong id="amount"><span class="currency-span">GHS</span> <span class="amount-value"></span></strong></p>
@@ -1293,14 +1293,14 @@ export class PayboxCheckoutWidget {
                         <p class="back-text">Back</p>
                       </section>
                       <figure class="close-icon">
-                        <img onClick={() => this.closeModal()} src="../../assets/svg/close-icon.svg" alt="close icon button" loading="eager" />
+                        <img onClick={() => this.closeModal()} src="/src/assets/svg/close-icon.svg" alt="close icon button" loading="eager" />
                       </figure>
                     </section>
                     {/* <!--This is where the main content is when the user clicks on the cash payment method on the initial screen--> */}
                     <section class={`${this.cashIsEnabled ? "main-content" : "hidden"}`} >
                       <section class={`${this.cashIsEnabled ? "recipient-logo-and-texts" : "hidden"}`} >
                         <figure id="recipient-logo">
-                          <img src="../../assets/svg/recipient-account-logo.svg" alt="recipient logo" loading="eager" />
+                          <img src="/src/assets/svg/recipient-account-logo.svg" alt="recipient logo" loading="eager" />
                         </figure>
                         <section class="sender-texts">
                           <p class="sender-text">Pay <strong id="amount"><span class="currency-span">GHS</span> <span class="amount-value"></span></strong></p>
@@ -1402,14 +1402,14 @@ export class PayboxCheckoutWidget {
                         <p class="back-text">Back</p>
                       </section>
                       <figure class="close-icon">
-                        <img onClick={() => this.closeModal()} src="../../assets/svg/close-icon.svg" alt="close icon button" loading="eager" />
+                        <img onClick={() => this.closeModal()} src="/src/assets/svg/close-icon.svg" alt="close icon button" loading="eager" />
                       </figure>
                     </section>
                     {/* <!--This is where the main content is when the user clicks on the test on the initial screen--> */}
                     <section class="main-content">
                       <section class="recipient-logo-and-texts">
                         <figure id="recipient-logo">
-                          <img src="../../assets/svg/recipient-account-logo.svg" alt="recipient logo" loading="eager" />
+                          <img src="/src/assets/svg/recipient-account-logo.svg" alt="recipient logo" loading="eager" />
                         </figure>
                         <section class="sender-texts">
                           <p class="sender-text">Pay <strong id="amount"><span class="currency-span">GHS</span> <span class="amount-value"></span></strong></p>

@@ -12,11 +12,12 @@
   "unpkg": "dist/checkout-widget/checkout-widget.esm.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ionic-team/stencil-component-starter.git"
+    "url": "https://github.com/payboxglobal/checkout-widget.git"
   },
   "files": [
     "dist/",
-    "loader/"
+    "loader/",
+    "src/assets"
   ],
   "scripts": {
     "build": "stencil build --docs",

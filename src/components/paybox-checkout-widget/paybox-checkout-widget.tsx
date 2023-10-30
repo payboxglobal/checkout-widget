@@ -591,27 +591,27 @@ export class PayboxCheckoutWidget {
           if (currentNetwork.mobile_network_name === "MTN") {
             networkFieldsParents.appendChild(this.createNetworkElement(
               currentNetwork.mobile_network_name, 'network', currentNetwork.mobile_network,
-              'mtn-network', '../../assets/svg/mtn.svg', 'mtn mobile money logo', 'MTN Mobile Money'));
+              'mtn-network', this.assetsBasePath + '/svg/mtn.svg', 'mtn mobile money logo', 'MTN Mobile Money'));
 
             networkFieldsParentsMobile.appendChild(this.createNetworkElement(
               currentNetwork.mobile_network_name + '-SELECT', 'network-mobile', currentNetwork.mobile_network,
-              'mtn-network', '../../assets/svg/mtn.svg', 'mtn mobile money logo', 'MTN Mobile Money'));
+              'mtn-network', this.assetsBasePath + '/svg/mtn.svg', 'mtn mobile money logo', 'MTN Mobile Money'));
           } else if (currentNetwork.mobile_network_name === "VODAFONE") {
             networkFieldsParents.appendChild(this.createNetworkElement(
               currentNetwork.mobile_network_name, 'network', currentNetwork.mobile_network,
-              'vodafone-network', '../../assets/svg/vodafone.svg', 'vodafone cash logo', 'VODAFONE Cash'));
+              'vodafone-network', this.assetsBasePath + '/svg/vodafone.svg', 'vodafone cash logo', 'VODAFONE Cash'));
 
             networkFieldsParentsMobile.appendChild(this.createNetworkElement(
               currentNetwork.mobile_network_name + '-SELECT', 'network-mobile', currentNetwork.mobile_network,
-              'vodafone-network', '../../assets/svg/vodafone.svg', 'vodafone cash logo', 'VODAFONE Cash'));
+              'vodafone-network', this.assetsBasePath + '/svg/vodafone.svg', 'vodafone cash logo', 'VODAFONE Cash'));
           } else if (currentNetwork.mobile_network_name === "AT") {
             networkFieldsParents.appendChild(this.createNetworkElement(
               currentNetwork.mobile_network_name, 'network', currentNetwork.mobile_network,
-              'airtel-network', '../../assets/svg/airtel.svg', 'airteltigo money logo', 'AIRTELTIGO Money'));
+              'airtel-network', this.assetsBasePath + '/svg/airtel.svg', 'airteltigo money logo', 'AIRTELTIGO Money'));
 
             networkFieldsParentsMobile.appendChild(this.createNetworkElement(
               currentNetwork.mobile_network_name + '-SELECT', 'network-mobile', currentNetwork.mobile_network,
-              'airtel-network', '../../assets/svg/airtel.svg', 'airteltigo money logo', 'AIRTELTIGO Money'));
+              'airtel-network', this.assetsBasePath + '/svg/airtel.svg', 'airteltigo money logo', 'AIRTELTIGO Money'));
           }
         }
       });

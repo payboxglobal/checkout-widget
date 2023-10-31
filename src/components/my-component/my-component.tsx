@@ -1,42 +1,33 @@
-import { Component, Host, Prop, h } from '@stencil/core';
-import { format } from '../../utils/utils';
+import { Component, Prop, h, State } from '@stencil/core';
+import state from '../../utils/store.js';
 
 @Component({
   tag: 'my-component',
   styleUrl: 'my-component.css',
   shadow: true,
 })
+
 export class MyComponent {
-  /**
-   * The first name
-   */
-  @Prop() first: string;
+  @Prop() merchant_key: string;
+  @Prop() payer_phone: string;
+  @Prop() payer_name: string;
+  @Prop() email: string;
 
-  /**
-   * The middle name
-   */
-  @Prop() middle: string;
+  @State() hasEnteredInput: boolean;
 
-  /**
-   * The last name
-   */
-  @Prop() last: string;
-
-  private getText(): string {
-    return format(this.first, this.middle, this.last);
+  componentWillLoad() {
+    // setInterval(() => state.seconds++, 1000);
   }
 
   render() {
     return (
-      <Host>
-        <div>Hello, World! I'm {this.getText()}</div>
-        <br></br>
-        <div class="container-custom">
-          <div class="bg-indigo-500 p-6 rounded-md flex justify-center">
-              <h1 class="text-white font-sans">This is a Stencil component using Tailwind</h1>
-          </div>
-        </div>
-      </Host>
+      <div>
+        {state.hasEnteredInput ?
+              <paybox-checkout-widget amount={state.amount} currency={state.currency}
+                merchant_key={this.merchant_key} payer_name={this.payer_name}
+                payer_phone={this.payer_phone} email={this.email} />
+              : <paybox-donation-widget />}
+      </div>   
     );
   }
 }

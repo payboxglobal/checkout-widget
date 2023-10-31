@@ -7,18 +7,10 @@
 import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
 export namespace Components {
     interface MyComponent {
-        /**
-          * The first name
-         */
-        "first": string;
-        /**
-          * The last name
-         */
-        "last": string;
-        /**
-          * The middle name
-         */
-        "middle": string;
+        "email": string;
+        "merchant_key": string;
+        "payer_name": string;
+        "payer_phone": string;
     }
     interface PayboxCheckoutWidget {
         "amount": number;
@@ -28,6 +20,8 @@ export namespace Components {
         "payer_name": string;
         "payer_phone": string;
         "phone_number": string;
+    }
+    interface PayboxDonationWidget {
     }
 }
 export interface PayboxCheckoutWidgetCustomEvent<T> extends CustomEvent<T> {
@@ -41,31 +35,41 @@ declare global {
         prototype: HTMLMyComponentElement;
         new (): HTMLMyComponentElement;
     };
+    interface HTMLPayboxCheckoutWidgetElementEventMap {
+        "didReset": any;
+    }
     interface HTMLPayboxCheckoutWidgetElement extends Components.PayboxCheckoutWidget, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLPayboxCheckoutWidgetElementEventMap>(type: K, listener: (this: HTMLPayboxCheckoutWidgetElement, ev: PayboxCheckoutWidgetCustomEvent<HTMLPayboxCheckoutWidgetElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLPayboxCheckoutWidgetElementEventMap>(type: K, listener: (this: HTMLPayboxCheckoutWidgetElement, ev: PayboxCheckoutWidgetCustomEvent<HTMLPayboxCheckoutWidgetElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
     }
     var HTMLPayboxCheckoutWidgetElement: {
         prototype: HTMLPayboxCheckoutWidgetElement;
         new (): HTMLPayboxCheckoutWidgetElement;
     };
+    interface HTMLPayboxDonationWidgetElement extends Components.PayboxDonationWidget, HTMLStencilElement {
+    }
+    var HTMLPayboxDonationWidgetElement: {
+        prototype: HTMLPayboxDonationWidgetElement;
+        new (): HTMLPayboxDonationWidgetElement;
+    };
     interface HTMLElementTagNameMap {
         "my-component": HTMLMyComponentElement;
         "paybox-checkout-widget": HTMLPayboxCheckoutWidgetElement;
+        "paybox-donation-widget": HTMLPayboxDonationWidgetElement;
     }
 }
 declare namespace LocalJSX {
     interface MyComponent {
-        /**
-          * The first name
-         */
-        "first"?: string;
-        /**
-          * The last name
-         */
-        "last"?: string;
-        /**
-          * The middle name
-         */
-        "middle"?: string;
+        "email"?: string;
+        "merchant_key"?: string;
+        "payer_name"?: string;
+        "payer_phone"?: string;
     }
     interface PayboxCheckoutWidget {
         "amount"?: number;
@@ -77,9 +81,12 @@ declare namespace LocalJSX {
         "payer_phone"?: string;
         "phone_number"?: string;
     }
+    interface PayboxDonationWidget {
+    }
     interface IntrinsicElements {
         "my-component": MyComponent;
         "paybox-checkout-widget": PayboxCheckoutWidget;
+        "paybox-donation-widget": PayboxDonationWidget;
     }
 }
 export { LocalJSX as JSX };
@@ -88,6 +95,7 @@ declare module "@stencil/core" {
         interface IntrinsicElements {
             "my-component": LocalJSX.MyComponent & JSXBase.HTMLAttributes<HTMLMyComponentElement>;
             "paybox-checkout-widget": LocalJSX.PayboxCheckoutWidget & JSXBase.HTMLAttributes<HTMLPayboxCheckoutWidgetElement>;
+            "paybox-donation-widget": LocalJSX.PayboxDonationWidget & JSXBase.HTMLAttributes<HTMLPayboxDonationWidgetElement>;
         }
     }
 }

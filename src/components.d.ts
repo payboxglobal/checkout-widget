@@ -6,11 +6,7 @@
  */
 import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
 export namespace Components {
-    interface MyComponent {
-        "email": string;
-        "merchant_key": string;
-        "payer_name": string;
-        "payer_phone": string;
+    interface DonationWidget {
     }
     interface PayboxCheckoutWidget {
         "amount": number;
@@ -22,6 +18,10 @@ export namespace Components {
         "phone_number": string;
     }
     interface PayboxDonationWidget {
+        "email": string;
+        "merchant_key": string;
+        "payer_name": string;
+        "payer_phone": string;
     }
 }
 export interface PayboxCheckoutWidgetCustomEvent<T> extends CustomEvent<T> {
@@ -29,11 +29,11 @@ export interface PayboxCheckoutWidgetCustomEvent<T> extends CustomEvent<T> {
     target: HTMLPayboxCheckoutWidgetElement;
 }
 declare global {
-    interface HTMLMyComponentElement extends Components.MyComponent, HTMLStencilElement {
+    interface HTMLDonationWidgetElement extends Components.DonationWidget, HTMLStencilElement {
     }
-    var HTMLMyComponentElement: {
-        prototype: HTMLMyComponentElement;
-        new (): HTMLMyComponentElement;
+    var HTMLDonationWidgetElement: {
+        prototype: HTMLDonationWidgetElement;
+        new (): HTMLDonationWidgetElement;
     };
     interface HTMLPayboxCheckoutWidgetElementEventMap {
         "didReset": any;
@@ -59,17 +59,13 @@ declare global {
         new (): HTMLPayboxDonationWidgetElement;
     };
     interface HTMLElementTagNameMap {
-        "my-component": HTMLMyComponentElement;
+        "donation-widget": HTMLDonationWidgetElement;
         "paybox-checkout-widget": HTMLPayboxCheckoutWidgetElement;
         "paybox-donation-widget": HTMLPayboxDonationWidgetElement;
     }
 }
 declare namespace LocalJSX {
-    interface MyComponent {
-        "email"?: string;
-        "merchant_key"?: string;
-        "payer_name"?: string;
-        "payer_phone"?: string;
+    interface DonationWidget {
     }
     interface PayboxCheckoutWidget {
         "amount"?: number;
@@ -82,9 +78,13 @@ declare namespace LocalJSX {
         "phone_number"?: string;
     }
     interface PayboxDonationWidget {
+        "email"?: string;
+        "merchant_key"?: string;
+        "payer_name"?: string;
+        "payer_phone"?: string;
     }
     interface IntrinsicElements {
-        "my-component": MyComponent;
+        "donation-widget": DonationWidget;
         "paybox-checkout-widget": PayboxCheckoutWidget;
         "paybox-donation-widget": PayboxDonationWidget;
     }
@@ -93,7 +93,7 @@ export { LocalJSX as JSX };
 declare module "@stencil/core" {
     export namespace JSX {
         interface IntrinsicElements {
-            "my-component": LocalJSX.MyComponent & JSXBase.HTMLAttributes<HTMLMyComponentElement>;
+            "donation-widget": LocalJSX.DonationWidget & JSXBase.HTMLAttributes<HTMLDonationWidgetElement>;
             "paybox-checkout-widget": LocalJSX.PayboxCheckoutWidget & JSXBase.HTMLAttributes<HTMLPayboxCheckoutWidgetElement>;
             "paybox-donation-widget": LocalJSX.PayboxDonationWidget & JSXBase.HTMLAttributes<HTMLPayboxDonationWidgetElement>;
         }

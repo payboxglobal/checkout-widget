@@ -2,6 +2,7 @@ import { Component, Host, Prop, State, h, Event, EventEmitter, Element } from '@
 import * as widgetScript from '../../assets/scripts/script.js';
 import intlTelInput from 'intl-tel-input';
 import { isoMap } from './country-iso-mapping.js';
+import state from '../../utils/store.js';
 
 @Component({
   tag: 'paybox-checkout-widget',
@@ -234,6 +235,10 @@ export class PayboxCheckoutWidget {
       jqueryJSElement = document.createElement('script');
       jqueryJSElement.setAttribute('src', jQueryJSLink);
       document.body.appendChild(jqueryJSElement);
+    }
+
+    if(state.hasEnteredInput) {
+      this.openModal();
     }
   }
 
@@ -629,6 +634,10 @@ export class PayboxCheckoutWidget {
   closeModal() {
     this.el.shadowRoot.querySelector<HTMLDivElement>("#modal-container").classList.remove("flex-display");
     this.el.shadowRoot.querySelector<HTMLDivElement>("#modal-container").classList.add("hidden");
+
+    if(state.hasEnteredInput) {
+      state.hasEnteredInput = false;
+    }
   }
 
   render() {

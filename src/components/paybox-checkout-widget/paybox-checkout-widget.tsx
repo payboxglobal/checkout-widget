@@ -531,20 +531,21 @@ export class PayboxCheckoutWidget {
       const desktopPhoneInput = this.el.shadowRoot.getElementById('mobile-number');
       const mobilePhoneInput = this.el.shadowRoot.getElementById('mobile-number-m');
 
+      if(this.currency !== "EUR") {
+        this.desktopIti = intlTelInput(desktopPhoneInput, {
+          utilsScript: linkToTelPlugin,
+          onlyCountries: [isoMap.get(this.currency)],
+          allowDropdown: false,
+          autoPlaceholde: "aggressive"
+        });
 
-      this.desktopIti = intlTelInput(desktopPhoneInput, {
-        utilsScript: linkToTelPlugin,
-        onlyCountries: [isoMap.get(this.currency)],
-        allowDropdown: false,
-        autoPlaceholde: "aggressive"
-      });
-
-      this.mobileIti = intlTelInput(mobilePhoneInput, {
-        utilsScript: linkToTelPlugin,
-        onlyCountries: [isoMap.get(this.currency)],
-        allowDropdown: false,
-        autoPlaceholde: "aggressive"
-      });
+        this.mobileIti = intlTelInput(mobilePhoneInput, {
+          utilsScript: linkToTelPlugin,
+          onlyCountries: [isoMap.get(this.currency)],
+          allowDropdown: false,
+          autoPlaceholde: "aggressive"
+        });
+      }
     }
 
     this.el.shadowRoot.querySelectorAll<HTMLElement>(".amount-value").forEach((node) => { node.innerHTML = this.amount.toString(); });

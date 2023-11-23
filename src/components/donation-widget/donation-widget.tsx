@@ -1,4 +1,4 @@
-import { Component, Host, h, Element, State } from '@stencil/core';
+import { Component, Host, h, Element, State, Prop } from '@stencil/core';
 import state from '../../utils/store.js';
 
 @Component({
@@ -12,10 +12,80 @@ export class PayboxDonationWidget {
   @State() currency: string = "GHS";
   @State() amount: number = 0;
 
+  @Prop() merchant_key: string;
+
 
   packageVersion = "0.2.1";
   assetsBasePath = `https://unpkg.com/checkout-widget@${this.packageVersion}/src/assets`;//"../../assets";
 
+  private createCountryCurrencyItem(currencyCode: string, countryName: string): HTMLElement {
+    const section = document.createElement('section');
+    section.classList.add('country-currency-item');
+    section.addEventListener('click', () => this.setCurrency(currencyCode));
+
+    const flagImg = document.createElement('img');
+    flagImg.src = `${this.assetsBasePath}/flags/${countryName.toLowerCase()}.svg`;
+    flagImg.alt = 'country flag';
+    flagImg.loading = 'eager';
+
+    const countryNameParagraph = document.createElement('p');
+    countryNameParagraph.classList.add('country-name');
+
+    const currencyCodeSmall = document.createElement('small');
+    currencyCodeSmall.classList.add('country-currency-code');
+    currencyCodeSmall.textContent = currencyCode;
+
+    const countryNameText = document.createTextNode(` ${countryName}`);
+
+    countryNameParagraph.appendChild(currencyCodeSmall);
+    countryNameParagraph.appendChild(countryNameText);
+
+    section.appendChild(flagImg);
+    section.appendChild(countryNameParagraph);
+
+    return section;
+  }
+
+  loadSupportedCurrencies() {
+    var activeCountries = new Set<String>();
+    
+    fetch("https://paybox.com.co/active_networks", 
+    {
+      method: "GET",
+      headers: {
+        "Authorization": "Bearer " + this.merchant_key
+      }
+    })
+    .then(response => response.json())
+    .then(results => {
+      var currencyContainer = this.el.shadowRoot.querySelector("#country-currencies-container");
+      const countryFlag = this.el.shadowRoot.querySelector('#country-flag');
+      const currencyCode = this.el.shadowRoot.querySelector('#currency-code');
+      var addedPlaceHolder: boolean = false;
+      
+      results.forEach(result => {
+        if(!activeCountries.has(result.currency)) {
+          activeCountries.add(result.currency);
+          var newCountryItem = this.createCountryCurrencyItem(result.currency, result.country);
+          currencyContainer.appendChild(newCountryItem);
+
+          newCountryItem.addEventListener('click', () => {
+            const selectedCountryCurrency = newCountryItem.children[1].children[0].innerHTML;
+            countryFlag.setAttribute("src", newCountryItem.children[0].getAttribute("src"));
+            currencyCode.innerHTML = selectedCountryCurrency;
+          });
+
+          if(!addedPlaceHolder) {
+            const selectedCountryCurrency = newCountryItem.children[1].children[0].innerHTML;
+            countryFlag.setAttribute("src", newCountryItem.children[0].getAttribute("src"));
+            currencyCode.innerHTML = selectedCountryCurrency;
+            addedPlaceHolder = true;
+          }
+        }
+      });
+    })
+    .catch(error => console.log('error', error));
+  }
 
   componentDidLoad() {
     // Add custom font to page DOM since font-face doesn't work within Shadow DOM.
@@ -78,6 +148,7 @@ export class PayboxDonationWidget {
     });
 
 
+    this.loadSupportedCurrencies();
   }
 
   setCurrency(currency) {
@@ -113,8 +184,8 @@ export class PayboxDonationWidget {
                     <fieldset class="input-container">
                       <section class="currency-dropdown" id="currency-dropdown">
                         <section class="currency-container">
-                          <img id="country-flag" src={`${this.assetsBasePath}/flags/ghana.svg`} alt="country flag" loading="lazy" />
-                          <p class="currency-code" id="currency-code">GHS</p>
+                          <img id="country-flag"  alt="country flag" loading="lazy" />
+                          <p class="currency-code" id="currency-code"></p>
                         </section>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
                           <path d="M19.92 8.94995L13.4 15.47C12.63 16.24 11.37 16.24 10.6 15.47L4.07996 8.94995" stroke="#545A5E" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
@@ -142,8 +213,8 @@ export class PayboxDonationWidget {
                       </section>
                     </section>
                   </section>
-                  <section class="country-currencies-container">
-                    <section onClick={() => this.setCurrency("GHS")} class="country-currency-item">
+                  <section id='country-currencies-container' class="country-currencies-container">
+                    {/* <section onClick={() => this.setCurrency("GHS")} class="country-currency-item">
                       <img src={`${this.assetsBasePath}/flags/ghana.svg`} alt="country flag" loading="lazy" />
                       <p class="country-name"><small class="country-currency-code">GHS</small> Ghanian Cedis</p>
                     </section>
@@ -151,6 +222,18 @@ export class PayboxDonationWidget {
                       <img src={`${this.assetsBasePath}/flags/nigeria.svg`} alt="country flag" loading="lazy" />
                       <p class="country-name"><small class="country-currency-code">NGN</small> Nigerian Naira</p>
                     </section>
+                    <section onClick={() => this.setCurrency("USD")} class="country-currency-item">
+                      <img src={`${this.assetsBasePath}/flags/usa.svg`} alt="country flag" loading="lazy" />
+                      <p class="country-name"><small class="country-currency-code">USD</small> United States Dollar</p>
+                    </section>
+                    <section onClick={() => this.setCurrency("GBP")} class="country-currency-item">
+                      <img src={`${this.assetsBasePath}/flags/britain.svg`} alt="country flag" loading="lazy" />
+                      <p class="country-name"><small class="country-currency-code">GBP</small> British Pound</p>
+                    </section>
+                    <section onClick={() => this.setCurrency("EUR")} class="country-currency-item">
+                      <img src={`${this.assetsBasePath}/flags/euro.svg`} alt="country flag" loading="lazy" />
+                      <p class="country-name"><small class="country-currency-code">EUR</small> Euros</p>
+                    </section> */}
                   </section>
                 </section>
               </section>

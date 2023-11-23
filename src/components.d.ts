@@ -7,6 +7,7 @@
 import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
 export namespace Components {
     interface DonationWidget {
+        "merchant_key": string;
     }
     interface PayboxCheckoutWidget {
         "amount": number;
@@ -66,6 +67,7 @@ declare global {
 }
 declare namespace LocalJSX {
     interface DonationWidget {
+        "merchant_key"?: string;
     }
     interface PayboxCheckoutWidget {
         "amount"?: number;

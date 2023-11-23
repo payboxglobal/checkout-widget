@@ -22,7 +22,7 @@ export class MyComponent {
               <paybox-checkout-widget amount={state.amount} currency={state.currency}
                 merchant_key={this.merchant_key} payer_name={this.payer_name}
                 payer_phone={this.payer_phone} email={this.email} />
-              : <donation-widget />}
+              : <donation-widget merchant_key={this.merchant_key} />}
       </div>   
     );
   }

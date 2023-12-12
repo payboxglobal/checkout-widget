@@ -15,8 +15,8 @@ export class PayboxDonationWidget {
   @Prop() merchant_key: string;
 
 
-  packageVersion = "0.2.1";
-  assetsBasePath = `https://unpkg.com/checkout-widget@${this.packageVersion}/src/assets`;//"../../assets";
+  packageVersion = "0.2.3";
+  assetsBasePath = `https://unpkg.com/paybox-widgets@${this.packageVersion}/src/assets`;
 
   private createCountryCurrencyItem(currencyCode: string, countryName: string): HTMLElement {
     const section = document.createElement('section');

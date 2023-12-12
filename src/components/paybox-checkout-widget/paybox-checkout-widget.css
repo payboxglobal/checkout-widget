@@ -979,6 +979,9 @@ fieldset {
       background: var(--card-background-color);
       margin: 0 auto;
       align-items: center;
+      position: fixed;
+      width: fit-content;
+      justify-content: space-between;
   }
 
   .banner-main-content {

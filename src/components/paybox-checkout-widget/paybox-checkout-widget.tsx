@@ -54,8 +54,8 @@ export class PayboxCheckoutWidget {
   desktopIti: intlTelInput;
   mobileIti: intlTelInput;
 
-  packageVersion = "0.1.3";
-  assetsBasePath = `https://unpkg.com/checkout-widget@${this.packageVersion}/src/assets`;
+  packageVersion = "0.2.3";
+  assetsBasePath = `https://unpkg.com/paybox-widgets@${this.packageVersion}/src/assets`;
 
   createNetworkElement(inputId, inputName, inputValue, labelId, imgSrc, imgAlt, labelText) {
     // Create the <fieldset> element
@@ -328,9 +328,9 @@ export class PayboxCheckoutWidget {
           this.showSuccessPage();
         } else if (result.status === "Pending") {
           this.showPendingBanner(banner_postfix);
-          let timeToStopStatusCheck = 30000;
+          let timeToStopStatusCheck = 60000;
           if(this.mode === "Card") {
-            timeToStopStatusCheck = 60000;
+            timeToStopStatusCheck = 120000;
             window.open(result.checkout_url, '_blank');
           }
 
@@ -1115,7 +1115,7 @@ export class PayboxCheckoutWidget {
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                           <path d="M10.16 1.33269H5.84C3.33333 1.33269 3.14 3.58603 4.49333 4.81269L11.5067 11.186C12.86 12.4127 12.6667 14.666 10.16 14.666H5.84C3.33333 14.666 3.14 12.4127 4.49333 11.186L11.5067 4.81269C12.86 3.58603 12.6667 1.33269 10.16 1.33269Z" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
-                        <p id="banner-test">Pending test</p>
+                        <p id="banner-test">Payment Pending</p>
                       </section>
                       <section onClick={() => this.removeBanners()} id="close-pending-mobile" class="banner-close">
                         <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8" fill="none">
@@ -1255,7 +1255,7 @@ export class PayboxCheckoutWidget {
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                           <path d="M10.16 1.33269H5.84C3.33333 1.33269 3.14 3.58603 4.49333 4.81269L11.5067 11.186C12.86 12.4127 12.6667 14.666 10.16 14.666H5.84C3.33333 14.666 3.14 12.4127 4.49333 11.186L11.5067 4.81269C12.86 3.58603 12.6667 1.33269 10.16 1.33269Z" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
-                        <p id="banner-test">Pending test</p>
+                        <p id="banner-test">Payment Pending</p>
                       </section>
                       <section onClick={() => this.removeBanners()} id="close-pending-mobile" class="banner-close">
                         <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8" fill="none">
@@ -1364,7 +1364,7 @@ export class PayboxCheckoutWidget {
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                           <path d="M10.16 1.33269H5.84C3.33333 1.33269 3.14 3.58603 4.49333 4.81269L11.5067 11.186C12.86 12.4127 12.6667 14.666 10.16 14.666H5.84C3.33333 14.666 3.14 12.4127 4.49333 11.186L11.5067 4.81269C12.86 3.58603 12.6667 1.33269 10.16 1.33269Z" stroke="#091925" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
-                        <p id="banner-test">Pending test</p>
+                        <p id="banner-test">Payment Pending</p>
                       </section>
                       <section onClick={() => this.removeBanners()} id="close-pending-mobile" class="banner-close">
                         <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8" fill="none">

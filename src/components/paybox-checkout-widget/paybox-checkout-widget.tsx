@@ -273,9 +273,9 @@ export class PayboxCheckoutWidget {
     formData.append("payerName", this.payer_name);
     formData.append("payerPhone", this.payer_phone);
     formData.append("payerEmail", this.email);
-    formData.append("payload", this.payload);
-    formData.append("order_id", this.order_id.toString());
-    formData.append("customer_id", this.customer_id.toString());
+    if(this.payload) formData.append("payload", this.payload);
+    if(this.order_id) formData.append("order_id", this.order_id.toString());
+    if(this.customer_id) formData.append("customer_id", this.customer_id.toString());
 
     if (this.mode === "Mobile Money") {
       var mobile_number = null;

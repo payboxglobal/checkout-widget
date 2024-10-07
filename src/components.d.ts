@@ -11,12 +11,18 @@ export namespace Components {
     }
     interface PayboxCheckoutWidget {
         "amount": number;
+        "beneficiary_name"?: string;
         "currency": string;
+        "customer_id"?: number;
         "email": string;
         "merchant_key": string;
+        "order_id"?: number;
         "payer_name": string;
         "payer_phone": string;
+        "payload"?: string;
         "phone_number": string;
+        "redirect_url"?: string;
+        "reload"?: boolean;
     }
     interface PayboxDonationWidget {
         "email": string;
@@ -71,13 +77,19 @@ declare namespace LocalJSX {
     }
     interface PayboxCheckoutWidget {
         "amount"?: number;
+        "beneficiary_name"?: string;
         "currency"?: string;
+        "customer_id"?: number;
         "email"?: string;
         "merchant_key"?: string;
         "onDidReset"?: (event: PayboxCheckoutWidgetCustomEvent<any>) => void;
+        "order_id"?: number;
         "payer_name"?: string;
         "payer_phone"?: string;
+        "payload"?: string;
         "phone_number"?: string;
+        "redirect_url"?: string;
+        "reload"?: boolean;
     }
     interface PayboxDonationWidget {
         "email"?: string;

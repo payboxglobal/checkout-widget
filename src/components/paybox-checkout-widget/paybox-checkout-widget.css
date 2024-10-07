@@ -92,7 +92,9 @@
   /* margin-top: -10%; */
 }
 
-
+button {
+  cursor: pointer;
+}
 
 :host {
   font-family: 'Inter', sans-serif;

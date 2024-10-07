@@ -16,6 +16,12 @@ export class PayboxCheckoutWidget {
   @Prop() merchant_key: string;
   @Prop() payer_name: string;
   @Prop() currency: string;
+  @Prop() beneficiary_name?: string;
+  @Prop() payload?: string;
+  @Prop() reload?: boolean = false;
+  @Prop() redirect_url?: string;
+  @Prop() order_id?: number;
+  @Prop() customer_id?: number;
 
   @State() isInDeveloperMode: boolean = false;
   @State() cashIsEnabled: boolean = false;
@@ -245,6 +251,12 @@ export class PayboxCheckoutWidget {
   payRequest(e) {
     e.preventDefault();
 
+    const submitButton = e.submitter;
+
+    if(submitButton && submitButton instanceof HTMLButtonElement) {
+      submitButton.disabled = true;
+    }
+
     const formData = new FormData();
     formData.append("mode", this.mode);
     let banner_postfix = "";
@@ -261,6 +273,9 @@ export class PayboxCheckoutWidget {
     formData.append("payerName", this.payer_name);
     formData.append("payerPhone", this.payer_phone);
     formData.append("payerEmail", this.email);
+    formData.append("payload", this.payload);
+    formData.append("order_id", this.order_id.toString());
+    formData.append("customer_id", this.customer_id.toString());
 
     if (this.mode === "Mobile Money") {
       var mobile_number = null;
@@ -326,6 +341,17 @@ export class PayboxCheckoutWidget {
           this.el.shadowRoot.getElementById('payment_options').className = 'hidden';
           // this.el.shadowRoot.getElementById('confirm_details').className = 'hidden';
           this.showSuccessPage();
+
+          if(this.reload) {
+            setInterval(() => {
+              window.location.reload();
+            }, 3000);
+          } else if(this.redirect_url) {
+            setInterval(() => {
+              window.location.href = this.redirect_url;
+            }, 3000);
+          }
+          return;
         } else if (result.status === "Pending") {
           this.showPendingBanner(banner_postfix);
           let timeToStopStatusCheck = 60000;
@@ -350,6 +376,11 @@ export class PayboxCheckoutWidget {
                   this.removeBanners();
                   this.el.shadowRoot.getElementById('payment_options').className = 'hidden';
                   this.showSuccessPage();
+                  setInterval(() => {
+                    if(this.reload) {
+                      window.location.reload();
+                    }
+                  }, 3000);
                 } else if (currentStatus === "Pending") {
                   this.removeBanners();
                   this.showPendingBanner(banner_postfix);
@@ -369,6 +400,10 @@ export class PayboxCheckoutWidget {
       // .then(result => window.location.href = "https://paybox.com.co/payment_success?token=" + result.token
       // )
       .catch(error => console.log('error', error));
+
+      if(submitButton && submitButton instanceof HTMLButtonElement) {
+        submitButton.disabled = false;
+      }
   }
 
   showSuccessPage() {
@@ -581,7 +616,7 @@ export class PayboxCheckoutWidget {
   }
 
   getActiveNetworks() {
-    fetch("https://paybox.com.co/active_networks?currency=" + this.currency, {
+    fetch("https://paybox.com.co/active_networks_collection?currency=" + this.currency, {
       method: "GET",
       headers: {
         "Authorization": "Bearer " + this.merchant_key
@@ -733,7 +768,7 @@ export class PayboxCheckoutWidget {
                             <h2 class="content-title">Card</h2>
                             <p class="content-text">Click button below to make your payment with card</p>
                           </section>
-                          <button id="card-btn" onClick={() => this.inDesktopView()} class="desktop-btn">Pay <span class="currency-span">GHS</span> <span class="amount-value"></span></button>
+                          <button id="card-btn1" onClick={() => this.inDesktopView()} class="desktop-btn">Pay <span class="currency-span">GHS</span> <span class="amount-value"></span></button>
                         </section>
                         <section class="secured-container">
                           <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
@@ -778,7 +813,7 @@ export class PayboxCheckoutWidget {
                               </section>
                             </fieldset>
                           </fieldset>
-                          <button onClick={() => this.inDesktopView()} id="card-btn" class="desktop-btn">Pay <span class="currency-span">GHS</span> <span class="amount-value"></span></button>
+                          <button onClick={() => this.inDesktopView()} id="card-btn2" class="desktop-btn">Pay <span class="currency-span">GHS</span> <span class="amount-value"></span></button>
                         </section>
                         <section class="secured-container">
                           <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
@@ -794,7 +829,7 @@ export class PayboxCheckoutWidget {
                             <h2 class="content-title">Cash payment</h2>
                             <p class="content-text">Click button below to make your payment with card</p>
                           </section>
-                          <button id="card-btn" class="desktop-btn">Pay <span class="currency-span">GHS</span> <span class="amount-value"></span></button>
+                          <button id="card-btn3" class="desktop-btn">Pay <span class="currency-span">GHS</span> <span class="amount-value"></span></button>
                         </section>
                         <section class={`${this.cashIsEnabled ? "secured-container" : "hidden"}`}>
                           <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
@@ -810,7 +845,7 @@ export class PayboxCheckoutWidget {
                             <h2 class="content-title">Test</h2>
                             <p class="content-text">Click button below to test out the payment system</p>
                           </section>
-                          <button id="card-btn" class="desktop-btn">Pay <span class="currency-span">GHS</span> <span class="amount-value"></span></button>
+                          <button id="card-btn4" class="desktop-btn">Pay <span class="currency-span">GHS</span> <span class="amount-value"></span></button>
                         </section>
                         <section class={`${this.isInDeveloperMode ? "secured-container" : "hidden"}`}>
                           <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
@@ -1076,7 +1111,7 @@ export class PayboxCheckoutWidget {
                             <h2 class="content-title">Card</h2>
                             <p class="content-text">Click button below to make your payment with card</p>
                           </section>
-                          <button id="card-btn" onClick={() => this.inMobileView()} class="mobile-btn">Pay <span class="currency-span">GHS</span> <span class="amount-value"></span></button>
+                          <button id="card-btn5" onClick={() => this.inMobileView()} class="mobile-btn">Pay <span class="currency-span">GHS</span> <span class="amount-value"></span></button>
                         </section>
                       </section>
                     </section>
@@ -1325,7 +1360,7 @@ export class PayboxCheckoutWidget {
                             <h2 class="content-title">Cash payment</h2>
                             <p class="content-text">Click button below to make your payment with cash</p>
                           </section>
-                          <button id="card-btn" onClick={() => this.inMobileView()} class="mobile-btn">Pay <span class="currency-span">GHS</span> <span class="amount-value"></span></button>
+                          <button id="card-btn6" onClick={() => this.inMobileView()} class="mobile-btn">Pay <span class="currency-span">GHS</span> <span class="amount-value"></span></button>
                         </section>
                       </section>
                     </section>
@@ -1434,7 +1469,7 @@ export class PayboxCheckoutWidget {
                             <h2 class="content-title">Test</h2>
                             <p class="content-text">Click button below to test out the payment system</p>
                           </section>
-                          <button id="card-btn" onClick={() => this.inMobileView()} class="mobile-btn">Pay <span class="currency-span">GHS</span> <span class="amount-value"></span></button>
+                          <button id="card-btn7" onClick={() => this.inMobileView()} class="mobile-btn">Pay <span class="currency-span">GHS</span> <span class="amount-value"></span></button>
                         </section>
                       </section>
                     </section>
@@ -1535,9 +1570,9 @@ export class PayboxCheckoutWidget {
               </svg>
               <section id="success-texts">
                 <h1 id="success-header-text">Payment done!</h1>
-                <p id="success-subtext">You've successfully paid PayBox <span class="currency-span">GHS</span> <span class="amount-value"></span> from your account.</p>
+                <p id="success-subtext">You've successfully paid <b>{this.beneficiary_name || 'PayBox'}</b> <span class="currency-span">GHS</span> <span class="amount-value"></span> from your account.</p>
               </section>
-              <button id="card-btn" class="mobile-btn" onClick={() => this.closeModal()}>Close</button>
+              <button id="card-btn8" class="mobile-btn" onClick={() => this.closeModal()}>Close</button>
             </section>
 
 
@@ -1559,9 +1594,9 @@ export class PayboxCheckoutWidget {
               </svg>
               <section id="success-texts">
                 <h1 id="success-header-text">Payment done!</h1>
-                <p id="success-subtext">You've successfully paid PayBox <span class="currency-span">GHS</span> <span class="amount-value"></span> from your account.</p>
+                <p id="success-subtext">You've successfully paid <b>{this.beneficiary_name || 'PayBox'}</b> <span class="currency-span">GHS</span> <span class="amount-value"></span> from your account.</p>
               </section>
-              <button id="card-btn" type='button' onClick={() => this.closeModal()} class="desktop-btn">Close</button>
+              <button id="card-btn9" type='button' onClick={() => this.closeModal()} class="desktop-btn">Close</button>
             </section>
 
 

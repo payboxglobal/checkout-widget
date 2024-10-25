@@ -96,7 +96,6 @@ Some of these properties are needed to initiate a payment on the widgets, others
 | phone_number (optional)     | string    | Phone number to send payment status to (Not payer Mobile Money number)                                                       | No                  |
 | payer_name (optional)       | string    | Name of the payer                                                                                                            | No                  |
 | currency                    | string    | The currency in which the payment is made (e.g., USD, EUR)                                                                   | No                  |
-| beneficiary_name (optional) | string    | The name of the beneficiary receiving the payment                                                                            | No                  |
 | payload (optional)          | string    | Additional data sent along with the payment request.                                                                         | Yes                 |
 | reload (optional)           | boolean   | Indicates if the payment process should trigger a reload (false by default)                                                  | No                  |
 | redirect_url (optional)     | string    | URL to redirect to after the payment is completed                                                                            | No                  |

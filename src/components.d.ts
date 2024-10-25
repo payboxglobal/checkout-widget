@@ -11,7 +11,6 @@ export namespace Components {
     }
     interface PayboxCheckoutWidget {
         "amount": number;
-        "beneficiary_name"?: string;
         "currency": string;
         "customer_id"?: number;
         "email": string;
@@ -77,7 +76,6 @@ declare namespace LocalJSX {
     }
     interface PayboxCheckoutWidget {
         "amount"?: number;
-        "beneficiary_name"?: string;
         "currency"?: string;
         "customer_id"?: number;
         "email"?: string;

@@ -16,7 +16,6 @@ export class PayboxCheckoutWidget {
   @Prop() merchant_key: string;
   @Prop() payer_name: string;
   @Prop() currency: string;
-  @Prop() beneficiary_name?: string;
   @Prop() payload?: string;
   @Prop() reload?: boolean = false;
   @Prop() redirect_url?: string;
@@ -25,6 +24,8 @@ export class PayboxCheckoutWidget {
 
   @State() isInDeveloperMode: boolean = false;
   @State() cashIsEnabled: boolean = false;
+  @State() cardIsEnabled: boolean = false;
+  @State() merchant_name: string;
   @State() gottenConfigs: boolean = false;
   @State() loadedFlags: boolean = false;
 
@@ -99,7 +100,7 @@ export class PayboxCheckoutWidget {
     small.textContent = labelText;
 
     // Append elements to build the hierarchy
-    figure.appendChild(img);
+    if(imgSrc) figure.appendChild(img);
     label.appendChild(figure);
     label.appendChild(small);
     fieldset.appendChild(input);
@@ -611,6 +612,14 @@ export class PayboxCheckoutWidget {
         } else {
           this.cashIsEnabled = false;
         }
+
+        if (result.accept_card === 1) {
+          this.cardIsEnabled = true;
+        } else {
+          this.cardIsEnabled = false;
+        }
+
+        this.merchant_name = result.name;
       })
       .catch(error => console.log('error', error));
   }
@@ -653,6 +662,14 @@ export class PayboxCheckoutWidget {
             networkFieldsParentsMobile.appendChild(this.createNetworkElement(
               currentNetwork.mobile_network_name + '-SELECT', 'network-mobile', currentNetwork.mobile_network,
               'airtel-network', this.assetsBasePath + '/svg/airtel.svg', 'airteltigo money logo', 'AIRTELTIGO Money'));
+          } else {
+            networkFieldsParents.appendChild(this.createNetworkElement(
+              currentNetwork.mobile_network_name, 'network', currentNetwork.mobile_network,
+              'airtel-network', null, currentNetwork.mobile_network_name + ' logo', currentNetwork.mobile_network_name));
+
+            networkFieldsParentsMobile.appendChild(this.createNetworkElement(
+              currentNetwork.mobile_network_name + '-SELECT', 'network-mobile', currentNetwork.mobile_network,
+              currentNetwork.mobile_network, null, currentNetwork.mobile_network_name + ' logo', currentNetwork.mobile_network_name));
           }
         }
       });
@@ -710,7 +727,7 @@ export class PayboxCheckoutWidget {
                       <h1 id="navbar-text">Pay with</h1>
                       <nav id="navbar">
                         <ul id="nav-items">
-                          <li class="nav-item">
+                          <li class={`${this.cardIsEnabled ? "nav-item" : "hidden"}`}>
                             <a ref={el => (this.cardNavItem = el as HTMLAnchorElement)} onClick={() => this.placeCardContent()} id="card-nav-item" class="nav-tab active-tab" href="#">
                               <svg class="navitem-icon" xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
                                 <path d="M2.24414 8.51483H22.2441" stroke="#091925" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
@@ -762,15 +779,15 @@ export class PayboxCheckoutWidget {
                     {/* <!--This is the container that contains the content respectively for each of the payment method tabs on the sidebar--> */}
                     <section ref={el => (this.paymentMethodContainer = el as HTMLElement)} id="payment-method-container">
                       {/* <!--This is the container that shows the content of the card payment method when selected--> */}
-                      <section ref={el => (this.cardDesktopContent = el as HTMLElement)} id="card-payment-content" class="payment-content">
-                        <section class="first-part">
-                          <section class="content-top-texts">
+                      <section ref={el => (this.cardDesktopContent = el as HTMLElement)} id="card-payment-content" class={`${this.cardIsEnabled ? "payment-content" : "hidden"}`}>
+                        <section class={`${this.cardIsEnabled ? "first-part" : "hidden"}`}>
+                          <section class={`${this.cardIsEnabled ? "content-top-texts" : "hidden"}`}>
                             <h2 class="content-title">Card</h2>
                             <p class="content-text">Click button below to make your payment with card</p>
                           </section>
                           <button id="card-btn1" onClick={() => this.inDesktopView()} class="desktop-btn">Pay <span class="currency-span">GHS</span> <span class="amount-value"></span></button>
                         </section>
-                        <section class="secured-container">
+                        <section class={`${this.cardIsEnabled ? "secured-container" : "hidden"}`}>
                           <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
                             <path d="M18.5 7.00989C18.5 3.76989 15.741 1.00989 12.5 1.00989C9.257 1.00989 6.5 3.76989 6.5 7.00989V9.73289C5.21101 11.1885 4.49957 13.0656 4.5 15.0099C4.5 19.4259 8.084 23.0099 12.501 23.0099C16.918 23.0099 20.5 19.4259 20.5 15.0099C20.5006 13.0653 19.7891 11.1878 18.5 9.73189V7.00989ZM8.5 7.00989C8.5 4.87889 10.369 3.00989 12.5 3.00989C14.631 3.00989 16.5 4.87889 16.5 7.00989V8.08889C15.2853 7.38236 13.9051 7.01025 12.4999 7.01042C11.0946 7.0106 9.71453 7.38306 8.5 8.08989V7.00989ZM11 19.4239L7.293 15.7169L8.707 14.3029L11 16.5959L16.293 11.3029L17.707 12.7169L11 19.4239Z" fill="#2C7CB9" />
                           </svg>
@@ -975,12 +992,12 @@ export class PayboxCheckoutWidget {
                       </figure>
                       <section id="mobile-top-content">
                         <h1 id="title">PayBox Checkout</h1>
-                        <p id="subtext">Use one of the payments method below to pay <span class="currency-span">GHS</span> <span class="amount-value"></span> to Paybox:</p>
+                        <p id="subtext">Use one of the payments method below to pay <span class="currency-span">GHS</span> <span class="amount-value"></span> to {this.merchant_name}:</p>
                       </section>
                       {/* <!--This is exactly where the various payment methods are--> */}
                       <nav id="navbar">
                         <ul id="nav-items">
-                          <li class="nav-item">
+                          <li class={`${this.cardIsEnabled ? "nav-item" : "hidden"}`}>
                             <a onClick={() => this.goMobileCardPage()} href="#">
                               <section class="nav-icon-text">
                                 <svg class="navitem-icon" xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
@@ -1095,8 +1112,8 @@ export class PayboxCheckoutWidget {
                       </figure>
                     </section>
                     {/* <!--This is where the main content is when the user clicks on the card payment method on the initial screen--> */}
-                    <section class="main-content">
-                      <section class="recipient-logo-and-texts">
+                    <section class={`${this.cardIsEnabled ? "main-content" : "hidden"}`}>
+                      <section class={`${this.cardIsEnabled ? "recipient-logo-and-texts" : "hidden"}`}>
                         <figure id="recipient-logo">
                           <img src={`${this.assetsBasePath}/svg/recipient-account-logo.svg`} alt="recipient logo" loading="eager" />
                         </figure>
@@ -1105,7 +1122,7 @@ export class PayboxCheckoutWidget {
                           <p class="sender-email">{this.email}</p>
                         </section>
                       </section>
-                      <section class="payment-content-container">
+                      <section class={`${this.cardIsEnabled ? "payment-content-container" : "hidden"}`}>
                         <section class="content-details">
                           <section class="content-top-texts">
                             <h2 class="content-title">Card</h2>
@@ -1570,7 +1587,7 @@ export class PayboxCheckoutWidget {
               </svg>
               <section id="success-texts">
                 <h1 id="success-header-text">Payment done!</h1>
-                <p id="success-subtext">You've successfully paid <b>{this.beneficiary_name || 'PayBox'}</b> <span class="currency-span">GHS</span> <span class="amount-value"></span> from your account.</p>
+                <p id="success-subtext">You've successfully paid <b>{this.merchant_name || 'PayBox'}</b> <span class="currency-span">GHS</span> <span class="amount-value"></span> from your account.</p>
               </section>
               <button id="card-btn8" class="mobile-btn" onClick={() => this.closeModal()}>Close</button>
             </section>
@@ -1594,7 +1611,7 @@ export class PayboxCheckoutWidget {
               </svg>
               <section id="success-texts">
                 <h1 id="success-header-text">Payment done!</h1>
-                <p id="success-subtext">You've successfully paid <b>{this.beneficiary_name || 'PayBox'}</b> <span class="currency-span">GHS</span> <span class="amount-value"></span> from your account.</p>
+                <p id="success-subtext">You've successfully paid <b>{this.merchant_name || 'PayBox'}</b> <span class="currency-span">GHS</span> <span class="amount-value"></span> from your account.</p>
               </section>
               <button id="card-btn9" type='button' onClick={() => this.closeModal()} class="desktop-btn">Close</button>
             </section>
